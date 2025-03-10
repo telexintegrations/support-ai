@@ -2,9 +2,14 @@ package api
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
+
+const port = "8080"
 
 var (
 	ErrRouterSetAlready = errors.New("router has aready been set")
@@ -29,8 +34,18 @@ func (s *Server) SetupRouter() error {
 	}
 
 	s.Router = gin.Default()
-
 	r := s.Router
+
+	// Setup cors
+	corsConfig := cors.Config{
+		AllowOrigins:     []string{fmt.Sprintf("http://localhost:%s", port), "https://telex.im"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+
+	r.Use(cors.New(corsConfig))
 	r.LoadHTMLGlob("templates/*")
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"message": "Deployed and Running chatbot AI"})
