@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Text to AI Chatbox</title>
+    <script>
+        function sendText(event) {
+            event.preventDefault();
+
+            let formData = new FormData();
+            let textInput = document.getElementById("textInput").value.trim();
+
+            if (!textInput) {
+                alert("Please enter some text.");
+                return;
+            }
+
+            formData.append("uploadtoai", textInput);
+
+            fetch("/upload-documents", {
+                method: "POST",
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("response").innerText = JSON.stringify(data, null, 2);
+                })
+                .catch(error => console.error("Error sending text:", error));
+        }
+    </script>
+</head>
+
+<body>
+    <h2>Enter Text for AI Chatbox</h2>
+    <form id="textForm">
+        <textarea id="textInput" name="uploadtoai" required rows="5" cols="40"></textarea>
+        <br>
+        <button type="submit" onclick="sendText(event)">Send</button>
+    </form>
+    <pre id="response"></pre>
+</body>
+
+</html>
