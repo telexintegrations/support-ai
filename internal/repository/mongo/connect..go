@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"slices"
@@ -21,15 +22,11 @@ const (
 )
 
 func ConnectToMongo(uri api.EnvConfig) (*mongo.Client, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
 	defer cancel()
 	clientOptions := options.Client().ApplyURI(uri.MONGODB_DEV_URI)
-
-	clientOptions.SetAuth(options.Credential{
-		Username: uri.MONGO_USERNAME,
-		Password: uri.MONGO_PASSWORD,
-	})
+	clientOptions.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
 	client, err := mongo.Connect(ctx, clientOptions)
 
 	defer func() {
@@ -45,16 +42,11 @@ func ConnectToMongo(uri api.EnvConfig) (*mongo.Client, error) {
 	// checks if a database exists
 	dbName := uri.MONGODATABASE_NAME
 	if !checkDBExists(client, dbName) {
-		fmt.Println("Database does not exist")
 		collection := client.Database(dbName).Collection(ContentEmbeddingsCollection) // create a database and a dummy collection
 		// create vector index in the collection
 
-		err = CreateVectorEmbeddingIndexes(collection, ctx)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
 		_, err := collection.InsertOne(context.Background(), bson.M{"name": "init"})
+		err = CreateVectorEmbeddingIndexes(collection, ctx)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
@@ -82,6 +74,7 @@ func NewMongoManager(client *mongo.Client) dbinterface.MongoManager {
 	}
 }
 
+// to be use when moving to mongodb atlas
 func CreateVectorEmbeddingIndexes(coll *mongo.Collection, ctx context.Context) error {
 	type vectorDefinitionField struct {
 		Type          string `bson:"type"`
@@ -101,7 +94,7 @@ func CreateVectorEmbeddingIndexes(coll *mongo.Collection, ctx context.Context) e
 		Definition: vectorDefinition{
 			Fields: []vectorDefinitionField{{
 				Type:          "vector",
-				Path:          "plot_embedding",
+				Path:          indexName,
 				NumDimensions: 1536,
 				Similarity:    "dotProduct",
 				Quantization:  "scalar"}},

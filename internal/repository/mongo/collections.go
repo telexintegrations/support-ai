@@ -3,16 +3,22 @@ package mongo
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"gopkg.in/mgo.v2/bson"
 )
 
+type Vector []float32
+
 type ContentEmbeddings struct {
-	Content   string
-	Embedding []float32
+	Content   string   `bson:"content"`
+	Embedding []Vector `bson:"embedding"`
 }
 
 // Expects a slice of interface containing both the content and embeddings data to be inserted into the collection
-func (m *MongoDB) InsertIntoEmbeddingCollection(content []string, embeddings [][]float32) error {
+func (m *MongoDB) InsertIntoEmbeddingCollection(content []string, embeddings [][]Vector) error {
 	dataEmbeddings := make([]interface{}, len(embeddings))
 
 	for i, data := range content {
@@ -32,6 +38,49 @@ func (m *MongoDB) InsertIntoEmbeddingCollection(content []string, embeddings [][
 	return nil
 }
 
-func (m *MongoDB) CreateCompanyCollection() {
+type Organization struct {
+	ID string `bson:"org_id"`
+}
 
+func (m *MongoDB) CreateCompanyCollection(data Organization) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_, err := m.DB().Database("support-ai").Collection("organizations").InsertOne(ctx, data)
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (m *MongoDB) SearchVectorFromContentEmbedding(queryVector Vector, limit uint32) ([]bson.M, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		{{"$vectorSearch", bson.D{
+			{"index", "vector_search_index"},
+			{"path", "embedding"},
+			{"queryVector", queryVector},
+			{"numCandidates", 100},
+			{"limit", limit},
+			{"similarity", "dotProduct"},
+		}}},
+	}
+	cursor, err := m.DB().Database("support-ai").Aggregate(ctx, pipeline)
+	if err != nil {
+		log.Println("Vector search aggregation error:", err)
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []bson.M
+	if err := cursor.All(ctx, &results); err != nil {
+		log.Println("Error decoding search results:", err)
+		return nil, err
+	}
+
+	return results, nil
 }
