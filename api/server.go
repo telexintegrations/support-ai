@@ -37,6 +37,7 @@ func (s *Server) SetupRouter() error {
 	})
 
 	r.GET("/upload", s.uploadPage)
+	r.GET("/support-response", s.RaggedResponse)
 	// r.GET("/integration",
 	return nil
 }

@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RaggedResponse(c *gin.Context){
+func (s *Server) RaggedResponse(c *gin.Context){
 
 	query := "She gets a lot of money after her uncle dies"
 	model := aicom.InitGeminiClient()
@@ -24,26 +24,30 @@ func RaggedResponse(c *gin.Context){
 	var results *mongo.Cursor
 
 	var response []bson.M
+	var db_response string
     // Iterate over results
-    for results.Next(ctx) {
-        var result bson.M
-        if err := results.Decode(&result); err != nil {
-            fmt.Println("Error decoding result:", err)
-            continue
-        }
-		fmt.Printf("Movie Name: %s,\nMovie Plot: %s\n\n", result["title"], result["plot"])
-		response = append(response, result)
-    }
+	if results != nil{
+		for results.Next(ctx) {
+			var result bson.M
+			if err := results.Decode(&result); err != nil {
+				fmt.Println("Error decoding result:", err)
+				continue
+			}
+			fmt.Printf("Movie Name: %s,\nMovie Plot: %s\n\n", result["title"], result["plot"])
+			response = append(response, result)
+		}
+		
+		jsonData, err := json.Marshal(response)
+		 if err != nil {
+			  panic(err)
+		 }
 	
-	jsonData, err := json.Marshal(response)
- 	if err != nil {
-  		panic(err)
- 	}
+		db_response = string(jsonData)
+	}
+    
 
-	answer1 := string(jsonData)
-
-	startPrompt := fmt.Sprintf("Based on the stringed json below, %s recommend these movies based on the original search query: %s, and make your response as humanoid as possible", answer1, query)
-	answer, err := aicom.GetAIResponse(model, startPrompt)
+	startPrompt := fmt.Sprintf("Based on the stringed json below, %s recommend these movies based on the original search query: %s, and make your response as humanoid as possible", db_response, query)
+	ai_response, err := aicom.GetAIResponse(model, startPrompt)
 	if err != nil {
 		fmt.Println("Failed to process file: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process file", "detail": err.Error()})
@@ -51,10 +55,10 @@ func RaggedResponse(c *gin.Context){
 	}
 
 	var parsedResponse map[string]interface{}
-	parseErr := json.Unmarshal([]byte(answer), &parsedResponse)
+	parseErr := json.Unmarshal([]byte(ai_response), &parsedResponse)
 	if parseErr != nil {
 		// If unmarshalling fails, wrap it in a response struct
-		parsedResponse = map[string]interface{}{"response": answer}
+		parsedResponse = map[string]interface{}{"response": ai_response}
 	}
 
 	formattedAnswer, err := aicom.FormatResponse(parsedResponse)
