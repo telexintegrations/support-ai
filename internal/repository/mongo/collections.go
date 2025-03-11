@@ -23,7 +23,7 @@ func (m *MongoDB) InsertIntoEmbeddingCollection(content []string, embeddings [][
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	_, err := m.DB().Database("support-ai").Collection("content-embeddings").InsertMany(ctx, dataEmbeddings)
+	_, err := m.DB().Database("support-ai").Collection(ContentEmbeddingsCollection).InsertMany(ctx, dataEmbeddings)
 
 	if err != nil {
 		fmt.Println(err)
