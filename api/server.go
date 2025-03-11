@@ -18,21 +18,21 @@ var (
 )
 
 type Server struct {
-	EnvVar *EnvConfig
-	Router *gin.Engine
+	EnvVar    *EnvConfig
+	Router    *gin.Engine
 	AIService aicom.AIService
 }
 
 func NewServer(envVar *EnvConfig) *Server {
 	aiservice, _ := aicom.NewAIService(envVar.GenaiAPIKey)
-	if aiservice == nil{
+	if aiservice == nil {
 		fmt.Println("Unable to instantiate AI client")
-	}else{
+	} else {
 		fmt.Println("AI client initiated")
 	}
 	return &Server{
-		EnvVar: envVar,
-		Router: nil,
+		EnvVar:    envVar,
+		Router:    nil,
 		AIService: aiservice,
 	}
 }
