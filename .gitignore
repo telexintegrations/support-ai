@@ -1,5 +1,5 @@
 app.env
 tmp
 *.exe
-.DS_Storetmp 
+.DS_Store
 .air.toml
