@@ -39,7 +39,6 @@ func NewAIService(apiKey string) (AIService, error) {
 	return &AIServiceImpl{client: client}, nil
 }
 
-
 func InitGeminiClient() *genai.Client {
 	apiKey := os.Getenv("GEMINI_API_KEY")
 	if apiKey == "" {
