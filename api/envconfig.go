@@ -9,6 +9,7 @@ import (
 // EnvConfig holds env variables as fields.
 type EnvConfig struct {
 	GenaiAPIKey string `mapstructure:"GEMINI_API_KEY"`
+	MONGODB_URI string `mapstructure:"MONGODB_DEV_URI"`
 }
 
 var (
