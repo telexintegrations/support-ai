@@ -60,8 +60,13 @@ func (s *Server) SetupRouter() error {
 	})
 
 	r.GET("/upload", s.uploadPage)
+<<<<<<< HEAD
 	r.GET("/integration.json", s.sendIntegrationJson)
 	r.POST("/target", s.receiveChatQueries)
+=======
+	r.GET("/support-response", s.RaggedResponse)
+	// r.GET("/integration",
+>>>>>>> a050d68 (chore: revised code)
 	return nil
 }
 
