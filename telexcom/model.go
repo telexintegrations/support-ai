@@ -27,7 +27,7 @@ type Permissions struct {
 }
 
 // Setting structure
-type Setting struct {
+type IntegrationSetting struct {
 	Label    string `json:"label"`
 	Type     string `json:"type"`
 	Required bool   `json:"required"`
@@ -35,16 +35,16 @@ type Setting struct {
 }
 
 type Data struct {
-	Date                Date         `json:"date"`
-	Descriptions        Descriptions `json:"descriptions"`
-	IntegrationCategory string       `json:"integration_category"`
-	IntegrationType     string       `json:"integration_type"`
-	IsActive            bool         `json:"is_active"`
-	KeyFeatures         []string     `json:"key_features"`
-	Author              string       `json:"author"`
-	Settings            []Setting    `json:"settings"`
-	TickURL             string       `json:"tick_url"`
-	TargetURL           string       `json:"target_url"`
+	Date                Date                 `json:"date"`
+	Descriptions        Descriptions         `json:"descriptions"`
+	IntegrationCategory string               `json:"integration_category"`
+	IntegrationType     string               `json:"integration_type"`
+	IsActive            bool                 `json:"is_active"`
+	KeyFeatures         []string             `json:"key_features"`
+	Author              string               `json:"author"`
+	Settings            []IntegrationSetting `json:"settings"`
+	TickURL             string               `json:"tick_url"`
+	TargetURL           string               `json:"target_url"`
 }
 
 // IntegrationJson main structure
@@ -52,6 +52,7 @@ type Integration struct {
 	Data Data `json:"data"`
 }
 
+// TODO: edit integration.json accordingly
 var IntegrationJson = Integration{
 	Data: Data{
 		Date: Date{
@@ -59,32 +60,27 @@ var IntegrationJson = Integration{
 			UpdatedAt: "2025-03-05",
 		},
 		Descriptions: Descriptions{
-			AppDescription:  "This integration listens in channels of organisations that use it, for Frequently Asked Questions about the organisation, its documentation or any document granted access to the AI integration for training and personification.",
+			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
 			AppLogo:         "https://my-portfolio-343207.web.app/MyLogo4.png",
-			AppName:         "CustomerServiceAIChatbot",
-			AppURL:          "https://96ac-102-216-183-26.ngrok-free.app/integration",
-			BackgroundColor: "#fff",
+			AppName:         "Telex Support AI",
+			AppURL:          " https://3ff1-102-91-71-146.ngrok-free.app",
+			BackgroundColor: "#ffff",
 		},
 		IntegrationCategory: "AI & Machine Learning",
-		IntegrationType:     "output",
+		IntegrationType:     "interval",
 		IsActive:            true,
 		KeyFeatures:         []string{"Gives apt responses to FAQs.", "Sends users response based on data stored in database."},
-		Author:              "Samuel Ikoli",
-		Settings: []Setting{
+		Author:              "TSA team hng12",
+		Settings: []IntegrationSetting{
 			{
-				Label:    "File-path",
-				Type:     "text",
-				Required: true,
-				Default:  "",
-			},
-			{
-				Label:    "Webhook",
+				Label:    "support-channel-id",
 				Type:     "text",
 				Required: true,
 				Default:  "",
 			},
 		},
-		TargetURL: "https://96ac-102-216-183-26.ngrok-free.app/target",
+		TargetURL: "https://3ff1-102-91-71-146.ngrok-free.app/target",
+		TickURL:   "",
 	},
 }
 
@@ -94,16 +90,21 @@ type MonitorPayload struct {
 	Settings  []interface{} `json:"settings,omitempty"`
 }
 
-type PromptPayload struct {
-	PathURL  string `json:"path_url,omitempty"`
-	Question string `json:"question,omitempty"`
+//TODO: clear this from here
+// type PromptPayload struct {
+// 	PathURL  string `json:"path_url,omitempty"`
+// 	Question string `json:"question,omitempty"`
+// }
+
+type TelexChatPayload struct {
+	ChannelID string               `json:"channel_id,omitempty"`
+	Message   string               `json:"message,omitempty"`
+	Settings  []IntegrationSetting `json:"settings,omitempty"`
 }
 
-type TelexPromptPayload struct {
-	Message  string    `json:"message,omitempty"`
-	Settings []Setting `json:"settings,omitempty"`
-}
-
-type GeminiResponse struct {
-	Response string `json:"response"`
+type TelexResponsePayload struct {
+	Message   string `json:"message"`
+	Username  string `json:"username"` // the name of your integration
+	EventName string `json:"event_name"`
+	Status    string `json:"status"`
 }

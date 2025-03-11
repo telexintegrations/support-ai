@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -38,12 +39,19 @@ func (s *Server) SetupRouter() error {
 
 	// Setup cors
 	corsConfig := cors.Config{
-		AllowOrigins:     []string{fmt.Sprintf("http://localhost:%s", port), "https://telex.im"},
+		AllowOrigins: []string{
+			fmt.Sprintf("http://localhost:%s", port),
+			"https://telex.im", "https://staging.telex.im",
+			"http://telextest.im", "http://staging.telextest.im",
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}
+	r.OPTIONS("/*any", func(ctx *gin.Context) {
+		ctx.Status(http.StatusNoContent)
+	})
 
 	r.Use(cors.New(corsConfig))
 	r.LoadHTMLGlob("templates/*")
@@ -52,7 +60,8 @@ func (s *Server) SetupRouter() error {
 	})
 
 	r.GET("/upload", s.uploadPage)
-	// r.GET("/integration",
+	r.GET("/integration.json", s.sendIntegrationJson)
+	r.POST("/target", s.receiveChatQueries)
 	return nil
 }
 
