@@ -1,11 +1,18 @@
 GO=go
-GOTEST=${GO} test -v
+GOTEST=${GO} test  ./tests/... -v
 COLORIZE ?= | sed 's/PASS/✅ PASS/g' | sed 's/FAIL/❌ FAIL/g' | sed 's/SKIP/🔕 SKIP/g'
 
 .PHONY: test
 test:
 	bash -c "set -e; set -o pipefail; $(GOTEST) . $(COLORIZE)"
 
+.PHONY: run
+run:
+	$(GO) run main.go
+
+.PHONY: test
+test:
+	$(GOTEST)
 # Start Docker Compose
 .PHONY: docker-up
 docker-up:

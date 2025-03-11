@@ -14,8 +14,12 @@ func main() {
 		fmt.Println(err)
 		panic(err)
 	}
+	_, err = mongo.ConnectToMongo(config)
 
-	mongo.ConnectToMongo(config)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	server := api.NewServer(&config)
 	server.StartServr(":8080")

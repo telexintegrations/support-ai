@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/telexintegrations/support-ai/api"
@@ -11,23 +12,23 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func ConnectToMongo(uri api.EnvConfig) (*mongo.Client, error) {
-	// Connect to MongoDB
-	//
-
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 
 	defer cancel()
+	clientOptions := options.Client().ApplyURI(uri.MONGODB_DEV_URI)
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri.MONGODB_URI))
+	clientOptions.SetAuth(options.Credential{
+		Username: uri.MONGO_USERNAME,
+		Password: uri.MONGO_PASSWORD,
+	})
+	client, err := mongo.Connect(ctx, clientOptions)
 
 	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			fmt.Println(err)
-			panic(err)
-		}
+		client.Disconnect(ctx)
 	}()
 
 	err = client.Ping(ctx, readpref.Primary())
@@ -36,11 +37,31 @@ func ConnectToMongo(uri api.EnvConfig) (*mongo.Client, error) {
 		return nil, err
 	}
 
+	// checks if a database exists
+	dbName := uri.MONGODATABASE_NAME
+	if !checkDBExists(client, dbName) {
+		fmt.Println("Database does not exist")
+		collection := client.Database(dbName).Collection("content-embeddings") // create a database and a dummy collection
+		_, err := collection.InsertOne(context.Background(), bson.M{"name": "init"})
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+	}
+
 	repository.DB.Mongo = NewMongoManager(client)
-	// repository.DB.
-	// instantiate db
 	fmt.Println("Database Connection successful")
 	return client, nil
+}
+
+func checkDBExists(client *mongo.Client, dbName string) bool {
+	databases, err := client.ListDatabaseNames(context.Background(), nil)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return slices.Contains(databases, dbName)
 }
 
 func NewMongoManager(client *mongo.Client) dbinterface.MongoManager {
@@ -48,3 +69,7 @@ func NewMongoManager(client *mongo.Client) dbinterface.MongoManager {
 		MongoClient: client,
 	}
 }
+
+// func CreateVectorIndexes(cl *mongo.Client) {
+
+// }
