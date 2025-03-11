@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/telexintegrations/support-ai/aicom"
 )
 
 const port = "8080"
@@ -19,12 +20,20 @@ var (
 type Server struct {
 	EnvVar *EnvConfig
 	Router *gin.Engine
+	AIService aicom.AIService
 }
 
 func NewServer(envVar *EnvConfig) *Server {
+	aiservice, _ := aicom.NewAIService(envVar.GenaiAPIKey)
+	if aiservice == nil{
+		fmt.Println("Unable to instantiate AI client")
+	}else{
+		fmt.Println("AI client initiated")
+	}
 	return &Server{
 		EnvVar: envVar,
 		Router: nil,
+		AIService: aiservice,
 	}
 }
 
@@ -62,10 +71,13 @@ func (s *Server) SetupRouter() error {
 	r.GET("/upload", s.uploadPage)
 	r.GET("/integration.json", s.sendIntegrationJson)
 	r.POST("/target", s.receiveChatQueries)
+	r.GET("/support-response", s.RaggedResponse)
+	r.GET("/basic-response", s.BasicResponse)
+	// r.GET("/integration",
 	return nil
 }
 
-func (s *Server) StartServr(addr string) error {
+func (s *Server) StartServer(addr string) error {
 	s.SetupRouter()
 	if err := s.Router.Run(addr); err != nil {
 		return err

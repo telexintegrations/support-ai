@@ -1,3 +1,5 @@
 app.env
-tmp 
+tmp
+*.exe
+.DS_Store
 .air.toml
