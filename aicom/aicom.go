@@ -13,6 +13,32 @@ import (
 	"google.golang.org/api/option"
 )
 
+type AIService interface{
+	GetAIResponse(message string) (string, error)
+	GetGeminiEmbedding(text string) ([]float32, error)
+	RaggingService(query string) (string, error)
+}
+
+type AIServiceImpl struct {
+	client *genai.Client
+}
+
+// NewAIService initializes and returns an AIServiceImpl instance
+func NewAIService(apiKey string) (AIService, error) {
+	fmt.Printf("API KEY is %s", apiKey)
+	if apiKey == "" {
+		return nil, fmt.Errorf("GEMINI_API_KEY is missing")
+	}
+
+	ctx := context.Background()
+	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Gemini client: %w", err)
+	}
+
+	return &AIServiceImpl{client: client}, nil
+}
+
 func InitGeminiClient() *genai.Client {
 	apiKey := os.Getenv("GEMINI_API_KEY")
 	if apiKey == "" {
@@ -42,10 +68,10 @@ func InitGeminiClient() *genai.Client {
 	return client
 }
 
-func GetAIResponse(client *genai.Client, message string) (string, error) {
+func (a *AIServiceImpl)GetAIResponse(message string) (string, error) {
 
 	ctx := context.Background()
-	model := client.GenerativeModel("models/gemini-1.5-flash-latest")
+	model := a.client.GenerativeModel("models/gemini-1.5-flash-latest")
 
 	resp, err := model.GenerateContent(ctx, genai.Text(message))
 	if err != nil {
@@ -72,10 +98,10 @@ func FormatResponse(data interface{}) ([]byte, error) {
 	return formattedJSON, nil
 }
 
-func GetGeminiEmbedding(client *genai.Client, text string) ([]float32, error) {
+func (a *AIServiceImpl)GetGeminiEmbedding(text string) ([]float32, error) {
 
     ctx := context.Background()
-    model := client.EmbeddingModel("gemini-embedding-exp-03-07") // Use an embedding model
+    model := a.client.EmbeddingModel("gemini-embedding-exp-03-07") // Use an embedding model
 
     res, err := model.EmbedContent(ctx, genai.Text(text))
     if err != nil {
@@ -85,9 +111,8 @@ func GetGeminiEmbedding(client *genai.Client, text string) ([]float32, error) {
     return res.Embedding.Values, nil
 }
 
-func RaggingService(query string) (string, error){
+func (a *AIServiceImpl)RaggingService(query string) (string, error){
 
-	model := InitGeminiClient()
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 	
@@ -117,8 +142,8 @@ func RaggingService(query string) (string, error){
 	}
     
 
-	startPrompt := fmt.Sprintf("Based on the stringed json below, %s recommend these movies based on the original search query: %s, and make your response as humanoid as possible", db_response, query)
-	ai_response, err := GetAIResponse(model, startPrompt)
+	startPrompt := fmt.Sprintf("You are a customer support officer, based on the stringed json below, %s respond to this query: %s, and make your response as humanoid as possible.", db_response, query)
+	ai_response, err := a.GetAIResponse(startPrompt)
 	if err != nil {
 		fmt.Println("Failed to process file: ", err)
 		return "", err
