@@ -26,15 +26,11 @@ func (s *Server) receiveChatQueries(ctx *gin.Context) {
 	}
 
 	p := bluemonday.StrictPolicy()
-	userQuery := p.Sanitize(req.Message)
-	slog.Info("Sanitized user query", "message", userQuery)
 
-	// respPayload := telexcom.TelexResponsePayload{
-	// 	Message:   "Cannot provide support without setting your channel ID",
-	// 	EventName: "info",
-	// 	Username:  "TelexAI",
-	// 	Status:    "info",
-	// }
+	userQuery := p.Sanitize(req.Message)
+
+	txc := telexcom.NewTelexCom()
+	go txc.GenerateResponseToQuery(ctx, userQuery, req.ChannelID)
 	ctx.Status(202)
 
 }

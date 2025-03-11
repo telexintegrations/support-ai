@@ -79,7 +79,7 @@ var IntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://3ff1-102-91-71-146.ngrok-free.app/target",
+		TargetURL: "https://bed9-197-210-77-203.ngrok-free.app/target",
 		TickURL:   "",
 	},
 }
