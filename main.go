@@ -8,5 +8,5 @@ func main() {
 	config, _ := api.LoadEnvConfig()
 
 	server := api.NewServer(&config)
-	server.StartServr(":8080")
+	server.StartServer(":8080")
 }
