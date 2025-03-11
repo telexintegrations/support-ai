@@ -15,16 +15,22 @@ type Vector []float32
 type ContentEmbeddings struct {
 	Content   string   `bson:"content"`
 	Embedding []Vector `bson:"embedding"`
+	OrgId     string   `bson:"org_id"`
 }
 
 // Expects a slice of interface containing both the content and embeddings data to be inserted into the collection
-func (m *MongoDB) InsertIntoEmbeddingCollection(ctx context.Context, content []string, embeddings [][]Vector) error {
+func (m *MongoDB) InsertIntoEmbeddingCollection(ctx context.Context, content []string, embeddings [][]Vector, orgId string) error {
+	if orgId == "" {
+		orgId = "018f6b36-bcc2-7d5a-b3c1-afe15c6d2"
+	}
+
 	dataEmbeddings := make([]interface{}, len(embeddings))
 
 	for i, data := range content {
 		dataEmbeddings[i] = ContentEmbeddings{
 			Content:   data,
 			Embedding: embeddings[i],
+			OrgId:     orgId,
 		}
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
