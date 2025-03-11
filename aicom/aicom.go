@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	genai "github.com/google/generative-ai-go/genai"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/api/option"
 )
 
@@ -80,4 +83,48 @@ func GetGeminiEmbedding(client *genai.Client, text string) ([]float32, error) {
     }
 
     return res.Embedding.Values, nil
+}
+
+func RaggingService(query string) (string, error){
+
+	model := InitGeminiClient()
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+	
+	//TODO VECTOR SEARCH SERVICE AND RESULTS GOES HERE, SHOULD RETURN A CURSOR INTO RESULTS
+	var results *mongo.Cursor
+
+	var response []bson.M
+	var db_response string
+    // Iterate over results
+	if results != nil{
+		for results.Next(ctx) {
+			var result bson.M
+			if err := results.Decode(&result); err != nil {
+				fmt.Println("Error decoding result:", err)
+				continue
+			}
+			fmt.Printf("Movie Name: %s,\nMovie Plot: %s\n\n", result["title"], result["plot"])
+			response = append(response, result)
+		}
+		
+		jsonData, err := json.Marshal(response)
+		 if err != nil {
+			  panic(err)
+		 }
+	
+		db_response = string(jsonData)
+	}
+    
+
+	startPrompt := fmt.Sprintf("Based on the stringed json below, %s recommend these movies based on the original search query: %s, and make your response as humanoid as possible", db_response, query)
+	ai_response, err := GetAIResponse(model, startPrompt)
+	if err != nil {
+		fmt.Println("Failed to process file: ", err)
+		return "", err
+	}
+
+	return ai_response, err
+
+	
 }
