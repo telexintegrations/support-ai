@@ -18,7 +18,7 @@ type ContentEmbeddings struct {
 }
 
 // Expects a slice of interface containing both the content and embeddings data to be inserted into the collection
-func (m *MongoDB) InsertIntoEmbeddingCollection(content []string, embeddings [][]Vector) error {
+func (m *MongoDB) InsertIntoEmbeddingCollection(ctx context.Context, content []string, embeddings [][]Vector) error {
 	dataEmbeddings := make([]interface{}, len(embeddings))
 
 	for i, data := range content {
@@ -55,18 +55,15 @@ func (m *MongoDB) CreateCompanyCollection(data Organization) error {
 	return nil
 }
 
-func (m *MongoDB) SearchVectorFromContentEmbedding(queryVector Vector, limit uint32) ([]bson.M, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func (m *MongoDB) SearchVectorFromContentEmbedding(ctx context.Context, queryVector Vector, limit uint32) ([]bson.M, error) {
 	pipeline := mongo.Pipeline{
-		{{"$vectorSearch", bson.D{
-			{"index", "vector_search_index"},
-			{"path", "embedding"},
-			{"queryVector", queryVector},
-			{"numCandidates", 100},
-			{"limit", limit},
-			{"similarity", "dotProduct"},
+		{{Key: "$vectorSearch", Value: bson.D{
+			{Name: "index", Value: "vector_search_index"},
+			{Name: "path", Value: "embedding"},
+			{Name: "queryVector", Value: queryVector},
+			{Name: "numCandidates", Value: 100},
+			{Name: "limit", Value: limit},
+			{Name: "similarity", Value: "dotProduct"},
 		}}},
 	}
 	cursor, err := m.DB().Database("support-ai").Aggregate(ctx, pipeline)
@@ -83,4 +80,14 @@ func (m *MongoDB) SearchVectorFromContentEmbedding(queryVector Vector, limit uin
 	}
 
 	return results, nil
+}
+
+func (m *MongoDB) DeleteOrganization(ctx context.Context, orgID string) error {
+
+	_, err := m.DB().Database("support-ai").Collection("organizations").DeleteOne(ctx, bson.M{"org_id": orgID})
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }

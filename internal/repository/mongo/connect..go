@@ -19,6 +19,7 @@ import (
 
 const (
 	ContentEmbeddingsCollection = "content-embeddings"
+	NumDimensions               = 3062
 )
 
 func ConnectToMongo(uri api.EnvConfig) (*mongo.Client, error) {
@@ -44,7 +45,6 @@ func ConnectToMongo(uri api.EnvConfig) (*mongo.Client, error) {
 	if !checkDBExists(client, dbName) {
 		collection := client.Database(dbName).Collection(ContentEmbeddingsCollection) // create a database and a dummy collection
 		// create vector index in the collection
-
 		_, err := collection.InsertOne(context.Background(), bson.M{"name": "init"})
 		err = CreateVectorEmbeddingIndexes(collection, ctx)
 		if err != nil {
@@ -59,12 +59,10 @@ func ConnectToMongo(uri api.EnvConfig) (*mongo.Client, error) {
 }
 
 func checkDBExists(client *mongo.Client, dbName string) bool {
-	databases, err := client.ListDatabaseNames(context.Background(), nil)
+	databases, err := client.ListDatabaseNames(context.Background(), bson.M{})
 	if err != nil {
-		fmt.Println(err)
 		return false
 	}
-
 	return slices.Contains(databases, dbName)
 }
 
@@ -89,25 +87,48 @@ func CreateVectorEmbeddingIndexes(coll *mongo.Collection, ctx context.Context) e
 	}
 
 	indexName := "vector_search_index"
-	opts := options.SearchIndexes().SetName(indexName).SetType("vectorSearch")
-	indexModel := mongo.SearchIndexModel{
-		Definition: vectorDefinition{
-			Fields: []vectorDefinitionField{{
-				Type:          "vector",
-				Path:          indexName,
-				NumDimensions: 1536,
-				Similarity:    "dotProduct",
-				Quantization:  "scalar"}},
-		},
-		Options: opts,
+	if ok, err := checkIfIndexExists(ctx, coll, indexName); err == nil && !ok {
+		opts := options.SearchIndexes().SetName(indexName).SetType("vectorSearch")
+		indexModel := mongo.SearchIndexModel{
+			Definition: vectorDefinition{
+				Fields: []vectorDefinitionField{{
+					Type:          "vector",
+					Path:          indexName,
+					NumDimensions: NumDimensions,
+					Similarity:    "dotProduct",
+					Quantization:  "scalar"}},
+			},
+			Options: opts,
+		}
+		searchIndexName, err := coll.SearchIndexes().CreateOne(ctx, indexModel)
+		if err != nil {
+			log.Printf("failed to create the search index: %v", err)
+			return err
+		}
+		log.Println("New search index named " + searchIndexName + " is building.")
+	} else {
+		fmt.Println(err)
 	}
-
-	searchIndexName, err := coll.SearchIndexes().CreateOne(ctx, indexModel)
-	if err != nil {
-		log.Printf("failed to create the search index: %v", err)
-		return err
-	}
-	log.Println("New search index named " + searchIndexName + " is building.")
-	// Await the creation of the index.
 	return nil
+}
+
+// Function to check if a search index exists
+func checkIfIndexExists(ctx context.Context, coll *mongo.Collection, indexName string) (bool, error) {
+	cursor, err := coll.SearchIndexes().List(ctx, nil)
+	if err != nil {
+		return false, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var index bson.M
+		if err := cursor.Decode(&index); err != nil {
+			return false, err
+		}
+
+		if index["name"] == indexName {
+			return true, nil
+		}
+	}
+	return false, nil
 }
