@@ -8,7 +8,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/telexintegrations/support-ai/api"
 	"github.com/telexintegrations/support-ai/internal/repository"
 	dbinterface "github.com/telexintegrations/support-ai/internal/repository/dbInterface"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -22,17 +21,13 @@ const (
 	NumDimensions               = 3062
 )
 
-func ConnectToMongo(uri api.EnvConfig) (*mongo.Client, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func ConnectToMongo(uri, db_name string) (*mongo.Client, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 
 	defer cancel()
-	clientOptions := options.Client().ApplyURI(uri.MONGODB_DEV_URI)
+	clientOptions := options.Client().ApplyURI(uri)
 	clientOptions.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
 	client, err := mongo.Connect(ctx, clientOptions)
-
-	defer func() {
-		client.Disconnect(ctx)
-	}()
 
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
@@ -41,7 +36,7 @@ func ConnectToMongo(uri api.EnvConfig) (*mongo.Client, error) {
 	}
 
 	// checks if a database exists
-	dbName := uri.MONGODATABASE_NAME
+	dbName := db_name
 	if !checkDBExists(client, dbName) {
 		collection := client.Database(dbName).Collection(ContentEmbeddingsCollection) // create a database and a dummy collection
 		// create vector index in the collection
@@ -72,8 +67,8 @@ func NewMongoManager(client *mongo.Client) dbinterface.MongoManager {
 	}
 }
 
-// to be use when moving to mongodb atlas
 func CreateVectorEmbeddingIndexes(coll *mongo.Collection, ctx context.Context) error {
+	// TODO create vector index dynamically, depending on collection
 	type vectorDefinitionField struct {
 		Type          string `bson:"type"`
 		Path          string `bson:"path"`
@@ -86,17 +81,16 @@ func CreateVectorEmbeddingIndexes(coll *mongo.Collection, ctx context.Context) e
 		Fields []vectorDefinitionField `bson:"fields"`
 	}
 
-	indexName := "vector_search_index"
+	indexName := "3072support"
 	if ok, err := checkIfIndexExists(ctx, coll, indexName); err == nil && !ok {
 		opts := options.SearchIndexes().SetName(indexName).SetType("vectorSearch")
 		indexModel := mongo.SearchIndexModel{
 			Definition: vectorDefinition{
 				Fields: []vectorDefinitionField{{
 					Type:          "vector",
-					Path:          indexName,
+					Path:          "embeddings",
 					NumDimensions: NumDimensions,
-					Similarity:    "dotProduct",
-					Quantization:  "scalar"}},
+					Similarity:    "dotProduct"}},
 			},
 			Options: opts,
 		}

@@ -15,3 +15,9 @@ type MongoManager interface {
 func (m *MongoDB) DB() *mongo.Client {
 	return m.MongoClient
 }
+
+func NewDBService(client *mongo.Client) *MongoDB {
+	return &MongoDB{
+		MongoClient: client,
+	}
+}

@@ -2,6 +2,8 @@ package api
 
 import (
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/spf13/viper"
 )
@@ -23,23 +25,50 @@ var (
 
 // LoadEnvConfig
 func LoadEnvConfig() (EnvConfig, error) {
-	viper.SetConfigName("app")
-	viper.AddConfigPath(".")
-	viper.SetConfigType("env")
+	var envConfig EnvConfig
+
+	// Always load system environment variables
 	viper.AutomaticEnv()
 
-	envConfig := EnvConfig{}
-	err := viper.ReadInConfig()
-	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			return envConfig, ErrEnvConfigFileNotFound
+	// Check if we're running in production
+	isProduction := os.Getenv("NODE_ENV") == "production"
+
+	if !isProduction {
+		// Load .env file in non-production environments
+		viper.SetConfigName(".env")  
+		viper.SetConfigType("env")  
+		viper.AddConfigPath(".")    
+
+		// Attempt to read config file
+		if err := viper.ReadInConfig(); err != nil {
+			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+				fmt.Println("❌ Failed to read config file:", err)
+				return envConfig, fmt.Errorf("failed to read config: %w", err)
+			}
+			fmt.Println("⚠️  No .env file found, falling back to system environment variables")
 		}
-		return envConfig, ErrFailedToReadConfig
 	}
 
-	err = viper.Unmarshal(&envConfig)
-	if err != nil {
-		return envConfig, ErrFailedToUnmarshalConfig
+	// Unmarshal environment variables into struct
+	if err := viper.Unmarshal(&envConfig); err != nil {
+		fmt.Println("❌ Failed to unmarshal environment variables:", err)
+		return envConfig, fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	if envConfig == (EnvConfig{}) {
+		fmt.Println("envConfig is empty!, loading os variables")
+		apikey := os.Getenv("GEMINI_API_KEY")
+		uri := os.Getenv("MONGODB_DEV_URI")
+		db_username := os.Getenv("MONGO_USERNAME")
+		db_password := os.Getenv("MONGO_PASSWORD")
+		db_name := os.Getenv("MONGODATABASE_NAME")
+		envConfig = EnvConfig{
+			GenaiAPIKey: apikey,
+			MONGODB_DEV_URI: uri,
+			MONGO_USERNAME: db_username,
+			MONGO_PASSWORD: db_password,
+			MONGODATABASE_NAME: db_name,
+		}
 	}
 
 	return envConfig, nil

@@ -1,9 +1,18 @@
 package format
 
 import (
+	"encoding/json"
 	"regexp"
 	"strings"
 )
+
+func FormatResponse(data interface{}) ([]byte, error) {
+	formattedJSON, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return formattedJSON, nil
+}
 
 func CleanText(text string) string {
 	text = regexp.MustCompile(`\s+`).ReplaceAllString(text, " ")

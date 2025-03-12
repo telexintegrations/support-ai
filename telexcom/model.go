@@ -61,9 +61,9 @@ var IntegrationJson = Integration{
 		},
 		Descriptions: Descriptions{
 			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
-			AppLogo:         "https://my-portfolio-343207.web.app/MyLogo4.png",
+			AppLogo:         "https://raw.githubusercontent.com/samuelIkoli/Chatbot-AI-Agent/refs/heads/dev/public/home/chatbot.png",
 			AppName:         "Telex Support AI",
-			AppURL:          " https://3ff1-102-91-71-146.ngrok-free.app",
+			AppURL:          "https://telex.im",
 			BackgroundColor: "#ffff",
 		},
 		IntegrationCategory: "AI & Machine Learning",
@@ -79,7 +79,38 @@ var IntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://bed9-197-210-77-203.ngrok-free.app/target",
+		TargetURL: "https://support-ai-hsd0.onrender.com/target",
+		TickURL:   "",
+	},
+}
+
+var NgrokIntegrationJson = Integration{
+	Data: Data{
+		Date: Date{
+			CreatedAt: "2025-03-05",
+			UpdatedAt: "2025-03-05",
+		},
+		Descriptions: Descriptions{
+			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
+			AppLogo:         "https://raw.githubusercontent.com/samuelIkoli/Chatbot-AI-Agent/refs/heads/dev/public/home/chatbot.png",
+			AppName:         "Ngrok Support AI",
+			AppURL:          "https://telex.im",
+			BackgroundColor: "#ffff",
+		},
+		IntegrationCategory: "AI & Machine Learning",
+		IntegrationType:     "interval",
+		IsActive:            true,
+		KeyFeatures:         []string{"Gives apt responses to FAQs.", "Sends users response based on data stored in database."},
+		Author:              "TSA team hng12",
+		Settings: []IntegrationSetting{
+			{
+				Label:    "support-channel-id",
+				Type:     "text",
+				Required: true,
+				Default:  "",
+			},
+		},
+		TargetURL: "https://c24b-102-88-55-142.ngrok-free.app/target",
 		TickURL:   "",
 	},
 }
@@ -108,3 +139,5 @@ type TelexResponsePayload struct {
 	EventName string `json:"event_name"`
 	Status    string `json:"status"`
 }
+
+

@@ -2,21 +2,16 @@ package aicom
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"os"
-	"time"
 
 	genai "github.com/google/generative-ai-go/genai"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/api/option"
 )
 
 type AIService interface{
 	GetAIResponse(message string) (string, error)
 	GetGeminiEmbedding(text string) ([]float32, error)
-	RaggingService(query string) (string, error)
+	FineTunedResponse(message string, db_response string) (string, error)
 }
 
 type AIServiceImpl struct {
@@ -37,35 +32,6 @@ func NewAIService(apiKey string) (AIService, error) {
 	}
 
 	return &AIServiceImpl{client: client}, nil
-}
-
-func InitGeminiClient() *genai.Client {
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
-		fmt.Println("GEMINI_API_KEY is missing")
-		os.Exit(1)
-	}
-
-	ctx := context.Background()
-	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
-	if err != nil {
-		fmt.Println("Failed to create Gemini client:", err)
-		os.Exit(1)
-	}
-
-	fmt.Println("Listing available Gemini models...")
-	modelIterator := client.ListModels(ctx)
-
-	// Iterate over available models
-	for {
-		model, err := modelIterator.Next()
-		if err != nil {
-			break // Exit loop when there are no more models
-		}
-		fmt.Printf("Available Model: %s\n", model.Name)
-	}
-
-	return client
 }
 
 func (a *AIServiceImpl)GetAIResponse(message string) (string, error) {
@@ -90,13 +56,6 @@ func (a *AIServiceImpl)GetAIResponse(message string) (string, error) {
 	return "", fmt.Errorf("unexpected response format")
 }
 
-func FormatResponse(data interface{}) ([]byte, error) {
-	formattedJSON, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		return nil, err
-	}
-	return formattedJSON, nil
-}
 
 func (a *AIServiceImpl)GetGeminiEmbedding(text string) ([]float32, error) {
 
@@ -111,45 +70,32 @@ func (a *AIServiceImpl)GetGeminiEmbedding(text string) ([]float32, error) {
     return res.Embedding.Values, nil
 }
 
-func (a *AIServiceImpl)RaggingService(query string) (string, error){
 
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
-	defer cancel()
-	
-	//TODO VECTOR SEARCH SERVICE AND RESULTS GOES HERE, SHOULD RETURN A CURSOR INTO RESULTS
-	var results *mongo.Cursor
+func (a *AIServiceImpl)FineTunedResponse(message, db_response string) (string, error) {
 
-	var response []bson.M
-	var db_response string
-    // Iterate over results
-	if results != nil{
-		for results.Next(ctx) {
-			var result bson.M
-			if err := results.Decode(&result); err != nil {
-				fmt.Println("Error decoding result:", err)
-				continue
-			}
-			fmt.Printf("Movie Name: %s,\nMovie Plot: %s\n\n", result["title"], result["plot"])
-			response = append(response, result)
-		}
-		
-		jsonData, err := json.Marshal(response)
-		 if err != nil {
-			  panic(err)
-		 }
-	
-		db_response = string(jsonData)
-	}
-    
-
-	startPrompt := fmt.Sprintf("You are a customer support officer, based on the stringed json below, %s respond to this query: %s, and make your response as humanoid as possible.", db_response, query)
+	newPrompt := `You are a support AI bot designed to assist users by providing accurate and precise answers to frequently asked questions (FAQs).
+	Instructions for Response Generation:
+	Answer Accurately:
+	If you have a correct and reliable answer, provide it in a clear, concise, and user-friendly manner.
+	Keep your response direct and helpful, avoiding unnecessary complexity.
+	Do NOT Guess or Generate False Information:
+	If the question is not covered in the provided knowledge base, do not attempt to generate an answer.
+	Instead, respond with the following message:
+	'I'm sorry, but I do not have an answer for that at the moment. Please contact the admin or refer to our official support channels for further assistance.'
+	Plain Text Responses Only:
+	Do not format responses using markdown, bullet points, html tags, or code blocks.
+	Ensure all responses are returned as plain text only for compatibility with the support system.
+	Maintain a Friendly and Professional Tone:
+	Always be polite, professional, and empathetic in your responses.
+	If a user seems frustrated or confused, acknowledge their concern before providing an answer.
+	Your goal is to efficiently assist users with their inquiries while maintaining clarity and professionalism. If unsure, redirect users to human support instead of providing incorrect information.`
+	startPrompt := fmt.Sprintf("%s, this is the context or knowledge base %s respond to this query: %s, and make your response as humanoid as possible.", newPrompt, db_response, message)
 	ai_response, err := a.GetAIResponse(startPrompt)
 	if err != nil {
 		fmt.Println("Failed to process file: ", err)
 		return "", err
 	}
+	fmt.Println("Response fine tuned")
 
 	return ai_response, err
-
-	
 }
