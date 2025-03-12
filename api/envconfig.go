@@ -31,8 +31,7 @@ func LoadEnvConfig() (EnvConfig, error) {
 	viper.AutomaticEnv()
 
 	// Check if we're running in production
-	var isProduction bool 
-	isProduction = os.Getenv("RENDER") == "true"
+	isProduction := os.Getenv("NODE_ENV") == "production"
 
 	if !isProduction {
 		// Load .env file in non-production environments
@@ -52,8 +51,18 @@ func LoadEnvConfig() (EnvConfig, error) {
 
 	// Unmarshal environment variables into struct
 	if err := viper.Unmarshal(&envConfig); err != nil {
-		fmt.Println("❌ Failed to unmarshal environment variables:", err)
-		return envConfig, fmt.Errorf("failed to unmarshal config: %w", err)
+		apikey := os.Getenv("GEMINI_API_KEY")
+		uri := os.Getenv("MONGODB_DEV_URI")
+		db_username := os.Getenv("MONGO_USERNAME")
+		db_password := os.Getenv("MONGO_PASSWORD")
+		db_name := os.Getenv("MONGODATABASE_NAME")
+		envConfig = EnvConfig{
+			GenaiAPIKey: apikey,
+			MONGODB_DEV_URI: uri,
+			MONGO_USERNAME: db_username,
+			MONGO_PASSWORD: db_password,
+			MONGODATABASE_NAME: db_name,
+		}
 	}
 
 	return envConfig, nil
