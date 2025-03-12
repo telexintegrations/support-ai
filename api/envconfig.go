@@ -31,7 +31,8 @@ func LoadEnvConfig() (EnvConfig, error) {
 	viper.AutomaticEnv()
 
 	// Check if we're running in production
-	isProduction := os.Getenv("NODE_ENV") == "production"
+	var isProduction bool 
+	isProduction = os.Getenv("RENDER") == "true"
 
 	if !isProduction {
 		// Load .env file in non-production environments
