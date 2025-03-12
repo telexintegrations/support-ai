@@ -61,9 +61,9 @@ var IntegrationJson = Integration{
 		},
 		Descriptions: Descriptions{
 			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
-			AppLogo:         "https://my-portfolio-343207.web.app/MyLogo4.png",
+			AppLogo:         "https://github.com/samuelIkoli/Chatbot-AI-Agent/blob/dev/public/home/chatbot.png",
 			AppName:         "Telex Support AI",
-			AppURL:          " https://3ff1-102-91-71-146.ngrok-free.app",
+			AppURL:          "https://telex.im",
 			BackgroundColor: "#ffff",
 		},
 		IntegrationCategory: "AI & Machine Learning",
@@ -79,7 +79,7 @@ var IntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://bed9-197-210-77-203.ngrok-free.app/target",
+		TargetURL: "https://support-ai-hsd0.onrender.com/target",
 		TickURL:   "",
 	},
 }
