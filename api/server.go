@@ -75,6 +75,7 @@ func (s *Server) SetupRouter() error {
 	r.GET("/test-db", s.FetchEmbeddings)
 	r.GET("/upload", s.uploadPage)
 	r.GET("/integration.json", s.sendIntegrationJson)
+	r.GET("/ngrok.json", s.sendNgrokJson)
 	r.POST("/target", s.receiveChatQueries)
 	r.GET("/basic-response", s.BasicResponse)
 	// r.GET("/integration",

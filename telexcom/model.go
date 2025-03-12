@@ -61,8 +61,39 @@ var IntegrationJson = Integration{
 		},
 		Descriptions: Descriptions{
 			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
-			AppLogo:         "https://github.com/samuelIkoli/Chatbot-AI-Agent/blob/dev/public/home/chatbot.png",
+			AppLogo:         "https://raw.githubusercontent.com/samuelIkoli/Chatbot-AI-Agent/refs/heads/dev/public/home/chatbot.png",
 			AppName:         "Telex Support AI",
+			AppURL:          "https://telex.im",
+			BackgroundColor: "#ffff",
+		},
+		IntegrationCategory: "AI & Machine Learning",
+		IntegrationType:     "interval",
+		IsActive:            true,
+		KeyFeatures:         []string{"Gives apt responses to FAQs.", "Sends users response based on data stored in database."},
+		Author:              "TSA team hng12",
+		Settings: []IntegrationSetting{
+			{
+				Label:    "support-channel-id",
+				Type:     "text",
+				Required: true,
+				Default:  "",
+			},
+		},
+		TargetURL: "https://support-ai-hsd0.onrender.com/target",
+		TickURL:   "",
+	},
+}
+
+var NgrokIntegrationJson = Integration{
+	Data: Data{
+		Date: Date{
+			CreatedAt: "2025-03-05",
+			UpdatedAt: "2025-03-05",
+		},
+		Descriptions: Descriptions{
+			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
+			AppLogo:         "https://raw.githubusercontent.com/samuelIkoli/Chatbot-AI-Agent/refs/heads/dev/public/home/chatbot.png",
+			AppName:         "Ngrok Support AI",
 			AppURL:          "https://telex.im",
 			BackgroundColor: "#ffff",
 		},
@@ -108,3 +139,5 @@ type TelexResponsePayload struct {
 	EventName string `json:"event_name"`
 	Status    string `json:"status"`
 }
+
+

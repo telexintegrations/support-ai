@@ -36,6 +36,10 @@ func (s *Server) sendIntegrationJson(ctx *gin.Context) {
 	ctx.Header("Content-Type", "application/json")
 	ctx.JSON(http.StatusOK, telexcom.IntegrationJson)
 }
+func (s *Server) sendNgrokJson(ctx *gin.Context) {
+	ctx.Header("Content-Type", "application/json")
+	ctx.JSON(http.StatusOK, telexcom.NgrokIntegrationJson)
+}
 
 func (s *Server) receiveChatQueries(ctx *gin.Context) {
 	var req telexcom.TelexChatPayload
