@@ -45,6 +45,7 @@ func (s *Server) sendNgrokJson(ctx *gin.Context) {
 func (s *Server) receiveChatQueries(ctx *gin.Context) {
 	
 	var req telexcom.TelexChatPayload
+	txc := telexcom.NewTelexCom()
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		slog.Error("Invalid payload", "error", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -67,10 +68,15 @@ func (s *Server) receiveChatQueries(ctx *gin.Context) {
 			if err != nil{
 				fmt.Println(err)
 			}
-		embedded_chunks = append(embedded_chunks, chunk_embedding)
-	}
+			embedded_chunks = append(embedded_chunks, chunk_embedding)
+		}
 	
-	s.DB.InsertIntoEmbeddingCollection(ctx, chunks, embedded_chunks, "")
+		err := s.DB.InsertIntoEmbeddingCollection(ctx, chunks, embedded_chunks, "")
+		if err != nil{
+			go txc.GenerateResponseToQuery(ctx, "Error uploading", req.ChannelID)
+		}else{
+			go txc.GenerateResponseToQuery(ctx, "Content Uploaded, you can use /help to send queries", req.ChannelID)
+		}
 	}else if task == ""{
 		return
 	}else{
@@ -94,7 +100,6 @@ func (s *Server) receiveChatQueries(ctx *gin.Context) {
 		ai_response, err := s.AIService.FineTunedResponse(userQuery, db_response)
 		
 		//post to telex
-		txc := telexcom.NewTelexCom()
 		go txc.GenerateResponseToQuery(ctx, ai_response, req.ChannelID)
 	}
 	ctx.Status(202)
