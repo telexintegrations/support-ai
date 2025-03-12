@@ -11,3 +11,4 @@ go.work.sum
 tmp
 .DS_Store
 .air.toml
+.env

@@ -23,7 +23,7 @@ var (
 
 // LoadEnvConfig
 func LoadEnvConfig() (EnvConfig, error) {
-	viper.SetConfigName("app")
+	viper.SetConfigName(".env")
 	viper.AddConfigPath(".")
 	viper.SetConfigType("env")
 	viper.AutomaticEnv()
