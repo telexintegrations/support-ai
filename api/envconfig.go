@@ -32,7 +32,7 @@ func LoadEnvConfig() (EnvConfig, error) {
 
 	// If NOT in production, load from .env file
 	if os.Getenv("NODE_ENV") != "production" {
-		viper.SetConfigName("env")  // Looks for "env.env" or ".env"
+		viper.SetConfigName(".env")  // Looks for "env.env" or ".env"
 		viper.SetConfigType("env")  // Explicitly define as env file
 		viper.AddConfigPath(".")    // Look in the current directory
 
