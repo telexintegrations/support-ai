@@ -49,8 +49,8 @@ func LoadEnvConfig() (EnvConfig, error) {
 		}
 	}
 
-	// Unmarshal environment variables into struct
-	if err := viper.Unmarshal(&envConfig); err != nil {
+	if envConfig == (EnvConfig{}) {
+		fmt.Println("envConfig is empty!, loading os variables")
 		apikey := os.Getenv("GEMINI_API_KEY")
 		uri := os.Getenv("MONGODB_DEV_URI")
 		db_username := os.Getenv("MONGO_USERNAME")
@@ -64,6 +64,9 @@ func LoadEnvConfig() (EnvConfig, error) {
 			MONGODATABASE_NAME: db_name,
 		}
 	}
+	
+
+	
 
 	return envConfig, nil
 }
