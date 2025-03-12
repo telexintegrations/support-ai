@@ -3,12 +3,23 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 
+	"github.com/robfig/cron"
 	"github.com/telexintegrations/support-ai/api"
 	"github.com/telexintegrations/support-ai/internal/repository/mongo"
 )
 
 func main() {
+
+	c := cron.New()
+	c.AddFunc("*/550 * * * *", func() {
+		fmt.Println("Cronning")
+		http.Get("https://support-ai-hsd0.onrender.com/")
+
+	})
+	c.Start()
+
 	config, err := api.LoadEnvConfig()
 
 	if err != nil {
