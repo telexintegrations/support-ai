@@ -110,7 +110,7 @@ var NgrokIntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://support-ai-hsd0.onrender.com/target",
+		TargetURL: "https://c24b-102-88-55-142.ngrok-free.app/target",
 		TickURL:   "",
 	},
 }

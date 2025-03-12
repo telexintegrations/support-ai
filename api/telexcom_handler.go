@@ -26,6 +26,7 @@ func processQuery(query string) (string, string) {
 		fmt.Println("Processing help with:", strings.TrimSpace(remainingContent))
 	} else {
 		remainingContent = query
+		task = ""
 		// fmt.Println("Invalid command or unrecognized query.")
 	}
 	return remainingContent, task
@@ -42,6 +43,7 @@ func (s *Server) sendNgrokJson(ctx *gin.Context) {
 }
 
 func (s *Server) receiveChatQueries(ctx *gin.Context) {
+	
 	var req telexcom.TelexChatPayload
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		slog.Error("Invalid payload", "error", err)
@@ -69,6 +71,8 @@ func (s *Server) receiveChatQueries(ctx *gin.Context) {
 	}
 	
 	s.DB.InsertIntoEmbeddingCollection(ctx, chunks, embedded_chunks, "")
+	}else if task == ""{
+		return
 	}else{
 		query_embedding, err := s.AIService.GetGeminiEmbedding(userQuery)
 		if err != nil{
