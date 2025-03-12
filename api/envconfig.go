@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/spf13/viper"
@@ -24,31 +25,30 @@ var (
 
 // LoadEnvConfig
 func LoadEnvConfig() (EnvConfig, error) {
-	envConfig := EnvConfig{}
-	if os.Getenv("NODE_ENV") == "production" {
-        // Production environment logic
-		viper.AutomaticEnv()
-    } else {
-        // Development or other environment logic
-	viper.SetConfigName(".env")
-	viper.AddConfigPath(".")
-	viper.SetConfigType("env")
+	var envConfig EnvConfig
+
+	// Always use viper.AutomaticEnv() to pick up env vars
 	viper.AutomaticEnv()
 
-	
-	err := viper.ReadInConfig()
-	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			return envConfig, ErrEnvConfigFileNotFound
+	// If NOT in production, load from .env file
+	if os.Getenv("NODE_ENV") != "production" {
+		viper.SetConfigName("env")  // Looks for "env.env" or ".env"
+		viper.SetConfigType("env")  // Explicitly define as env file
+		viper.AddConfigPath(".")    // Look in the current directory
+
+		// Read the config file if it exists
+		if err := viper.ReadInConfig(); err != nil {
+			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+				return envConfig, fmt.Errorf("failed to read config: %w", err)
+			}
+			// If file not found, continue (use system env vars)
 		}
-		return envConfig, ErrFailedToReadConfig
 	}
 
-	err = viper.Unmarshal(&envConfig)
-	if err != nil {
-		return envConfig, ErrFailedToUnmarshalConfig
+	// Unmarshal environment variables into struct
+	if err := viper.Unmarshal(&envConfig); err != nil {
+		return envConfig, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
-    }
 
 	return envConfig, nil
 }
