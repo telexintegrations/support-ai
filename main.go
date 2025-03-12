@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/telexintegrations/support-ai/api"
@@ -14,13 +15,15 @@ func main() {
 		fmt.Println(err)
 		panic(err)
 	}
-	_, err = mongo.ConnectToMongo(config)
+	db, err := mongo.ConnectToMongo(config.MONGODB_DEV_URI, config.MONGODATABASE_NAME)
 
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	server := api.NewServer(&config)
+	defer func() {
+		db.Disconnect(context.Background())
+	}()
+	server := api.NewServer(&config, db)
 	server.StartServer(":8080")
 }

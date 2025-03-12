@@ -4,16 +4,10 @@ app.env
 *.dll
 *.so
 *.dylib
-
 *.test
-
 *.out
-
 go.work
 go.work.sum
-
-.env
 tmp
-*.exe
 .DS_Store
 .air.toml

@@ -9,6 +9,8 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/telexintegrations/support-ai/aicom"
+	mongoClient "github.com/telexintegrations/support-ai/internal/repository/mongo"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const port = "8080"
@@ -21,9 +23,11 @@ type Server struct {
 	EnvVar    *EnvConfig
 	Router    *gin.Engine
 	AIService aicom.AIService
+	DB *mongoClient.MongoDB
 }
 
-func NewServer(envVar *EnvConfig) *Server {
+func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {
+	dbService := mongoClient.NewDBService(db)
 	aiservice, _ := aicom.NewAIService(envVar.GenaiAPIKey)
 	if aiservice == nil {
 		fmt.Println("Unable to instantiate AI client")
@@ -34,6 +38,7 @@ func NewServer(envVar *EnvConfig) *Server {
 		EnvVar:    envVar,
 		Router:    nil,
 		AIService: aiservice,
+		DB: dbService,
 	}
 }
 
@@ -42,7 +47,7 @@ func (s *Server) SetupRouter() error {
 	if s.Router != nil {
 		return ErrRouterSetAlready
 	}
-
+	// dbService := mongo.NewDBService(s.DB, s.EnvVar.MONGODATABASE_NAME)
 	s.Router = gin.Default()
 	r := s.Router
 
@@ -67,11 +72,10 @@ func (s *Server) SetupRouter() error {
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"message": "Deployed and Running chatbot AI"})
 	})
-
+	r.GET("/test-db", s.FetchEmbeddings)
 	r.GET("/upload", s.uploadPage)
 	r.GET("/integration.json", s.sendIntegrationJson)
 	r.POST("/target", s.receiveChatQueries)
-	r.GET("/support-response", s.RaggedResponse)
 	r.GET("/basic-response", s.BasicResponse)
 	// r.GET("/integration",
 	return nil
