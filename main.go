@@ -12,6 +12,7 @@ import (
 
 func main() {
 
+	//cron job to keep render alive
 	c := cron.New()
 	c.AddFunc("*/550 * * * *", func() {
 		fmt.Println("Cronning")
