@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"os"
 
 	"github.com/spf13/viper"
 )
@@ -23,22 +24,31 @@ var (
 
 // LoadEnvConfig
 func LoadEnvConfig() (EnvConfig, error) {
+	envConfig := EnvConfig{}
+	if os.Getenv("NODE_ENV") == "production" {
+        // Production environment logic
+		viper.AutomaticEnv()
+    } else {
+        // Development or other environment logic
+	viper.SetConfigName(".env")
+	viper.AddConfigPath(".")
 	viper.SetConfigType("env")
-	viper.AutomaticEnv() // Always read from environment variables
+	viper.AutomaticEnv()
 
-	// Check if running locally by looking for a .env file
-	viper.SetConfigFile(".env") // Explicitly set .env file
-	if err := viper.ReadInConfig(); err != nil {
-		// If the file isn't found, just continue using environment variables
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return EnvConfig{}, ErrFailedToReadConfig
+	
+	err := viper.ReadInConfig()
+	if err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			return envConfig, ErrEnvConfigFileNotFound
 		}
+		return envConfig, ErrFailedToReadConfig
 	}
 
-	var envConfig EnvConfig
-	if err := viper.Unmarshal(&envConfig); err != nil {
-		return EnvConfig{}, ErrFailedToUnmarshalConfig
+	err = viper.Unmarshal(&envConfig)
+	if err != nil {
+		return envConfig, ErrFailedToUnmarshalConfig
 	}
+    }
 
 	return envConfig, nil
 }
