@@ -23,23 +23,21 @@ var (
 
 // LoadEnvConfig
 func LoadEnvConfig() (EnvConfig, error) {
-	viper.SetConfigName(".env")
-	viper.AddConfigPath(".")
 	viper.SetConfigType("env")
-	viper.AutomaticEnv()
+	viper.AutomaticEnv() // Always read from environment variables
 
-	envConfig := EnvConfig{}
-	err := viper.ReadInConfig()
-	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			return envConfig, ErrEnvConfigFileNotFound
+	// Check if running locally by looking for a .env file
+	viper.SetConfigFile(".env") // Explicitly set .env file
+	if err := viper.ReadInConfig(); err != nil {
+		// If the file isn't found, just continue using environment variables
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			return EnvConfig{}, ErrFailedToReadConfig
 		}
-		return envConfig, ErrFailedToReadConfig
 	}
 
-	err = viper.Unmarshal(&envConfig)
-	if err != nil {
-		return envConfig, ErrFailedToUnmarshalConfig
+	var envConfig EnvConfig
+	if err := viper.Unmarshal(&envConfig); err != nil {
+		return EnvConfig{}, ErrFailedToUnmarshalConfig
 	}
 
 	return envConfig, nil
