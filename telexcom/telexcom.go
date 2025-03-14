@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -61,8 +62,8 @@ func (txc *TelexCom) GenerateResponseToQuery(ctx context.Context, response, chan
 	}
 	defer res.Body.Close()
 
-	// body, _ := io.ReadAll(res.Body)
-	// fmt.Println("Response from telex is: ", string(body))
+	body, _ := io.ReadAll(res.Body)
+	fmt.Println("Response from telex is: ", string(body))
 	// slog.Info("Sent error log to telex")
 
 	return nil
