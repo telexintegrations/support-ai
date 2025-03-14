@@ -63,7 +63,7 @@ var IntegrationJson = Integration{
 			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
 			AppLogo:         "https://raw.githubusercontent.com/samuelIkoli/Chatbot-AI-Agent/refs/heads/dev/public/home/chatbot.png",
 			AppName:         "Telex Support AI",
-			AppURL:          "https://telex.im",
+			AppURL:          "https://chatbot-ai-agent.vercel.app/",
 			BackgroundColor: "#ffff",
 		},
 		IntegrationCategory: "AI & Machine Learning",
@@ -94,7 +94,7 @@ var NgrokIntegrationJson = Integration{
 			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
 			AppLogo:         "https://raw.githubusercontent.com/samuelIkoli/Chatbot-AI-Agent/refs/heads/dev/public/home/chatbot.png",
 			AppName:         "Ngrok Support AI",
-			AppURL:          "https://telex.im",
+			AppURL:          "https://chatbot-ai-agent.vercel.app/",
 			BackgroundColor: "#ffff",
 		},
 		IntegrationCategory: "AI & Machine Learning",
@@ -110,7 +110,7 @@ var NgrokIntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://c24b-102-88-55-142.ngrok-free.app/target",
+		TargetURL: "https://6be6-102-88-55-142.ngrok-free.app/target",
 		TickURL:   "",
 	},
 }
@@ -139,5 +139,3 @@ type TelexResponsePayload struct {
 	EventName string `json:"event_name"`
 	Status    string `json:"status"`
 }
-
-

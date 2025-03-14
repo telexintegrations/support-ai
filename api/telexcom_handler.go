@@ -43,7 +43,7 @@ func (s *Server) sendNgrokJson(ctx *gin.Context) {
 }
 
 func (s *Server) receiveChatQueries(ctx *gin.Context) {
-	
+	var return_response string
 	var req telexcom.TelexChatPayload
 	txc := telexcom.NewTelexCom()
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -55,8 +55,8 @@ func (s *Server) receiveChatQueries(ctx *gin.Context) {
 	}
 
 	p := bluemonday.StrictPolicy()
-
 	userQuery := p.Sanitize(req.Message)
+	fmt.Printf("Request Message is: %s",userQuery)
 	var task string
 	userQuery, task = processQuery(userQuery)
 
@@ -66,7 +66,7 @@ func (s *Server) receiveChatQueries(ctx *gin.Context) {
 		for _, chunk := range chunks{
 			chunk_embedding, err := s.AIService.GetGeminiEmbedding(chunk)
 			if err != nil{
-				fmt.Println(err)
+				go txc.GenerateResponseToQuery(ctx, "Error uploading to AI, check Credits for AI or contact support", req.ChannelID)
 			}
 			embedded_chunks = append(embedded_chunks, chunk_embedding)
 		}
@@ -78,6 +78,7 @@ func (s *Server) receiveChatQueries(ctx *gin.Context) {
 			go txc.GenerateResponseToQuery(ctx, "Content Uploaded, you can use /help to send queries", req.ChannelID)
 		}
 	}else if task == ""{
+		fmt.Println("no slash command")
 		return
 	}else{
 		query_embedding, err := s.AIService.GetGeminiEmbedding(userQuery)
@@ -98,11 +99,17 @@ func (s *Server) receiveChatQueries(ctx *gin.Context) {
 		fmt.Printf("db_response is: %s",db_response)
 		//fine tune response
 		ai_response, err := s.AIService.FineTunedResponse(userQuery, db_response)
-		
+		return_response = ai_response
 		//post to telex
 		go txc.GenerateResponseToQuery(ctx, ai_response, req.ChannelID)
 	}
-	ctx.Status(202)
+	ctx.JSON(200, gin.H{
+		"event_name": "Query Support",
+		"message": return_response,
+		"status": "success",
+		// "reply_in_thread": true,
+		"username": "Support AI",
+	  })
 
 }
 

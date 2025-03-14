@@ -1,13 +1,13 @@
 package format
 
 import (
+	"bytes"
 	"fmt"
-	"log"
-	"os"
+	"io"
+	"mime/multipart"
 
 	"github.com/nguyenthenguyen/docx"
-	"github.com/unidoc/unipdf/v3/extractor"
-	"github.com/unidoc/unipdf/v3/model"
+	"rsc.io/pdf"
 )
 
 // isPDF checks if the file is a PDF.
@@ -20,11 +20,11 @@ func isDOCX(filePath string) bool {
 	return len(filePath) > 5 && filePath[len(filePath)-5:] == ".docx"
 }
 
-func ExtractTextFromDocx(filePath string) (string, error) {
-	doc, err := docx.ReadDocxFile(filePath)
-
+func ExtractTextFromDocx(fileBytes []byte) (string, error) {
+	reader := bytes.NewReader(fileBytes)
+	doc, err := docx.ReadDocxFromMemory(reader, int64(len(fileBytes)))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to read DOCX file: %w", err)
 	}
 	defer doc.Close()
 
@@ -32,58 +32,53 @@ func ExtractTextFromDocx(filePath string) (string, error) {
 	return text, nil
 }
 
-func ExtractTextFromPDF(pdfPath string) (string, error) {
-	f, err := os.Open(pdfPath)
+func ExtractTextFromPDF(pdfBytes []byte) (string, error) {
+	reader := bytes.NewReader(pdfBytes)
+	pdfDoc, err := pdf.NewReader(reader, int64(len(pdfBytes)))
 	if err != nil {
-		return "", fmt.Errorf("failed to open PDF file: %w", err)
-	}
-	defer f.Close()
-
-	// Load the PDF document
-	pdfReader, err := model.NewPdfReader(f)
-	if err != nil {
-		return "", fmt.Errorf("failed to read PDF: %w", err)
+		return "", err
 	}
 
-	// Get total pages
-	numPages, err := pdfReader.GetNumPages()
-	if err != nil {
-		return "", fmt.Errorf("failed to get page count: %w", err)
-	}
-
-	// Extract text from each page
 	var extractedText string
+	numPages := pdfDoc.NumPage()
 	for i := 1; i <= numPages; i++ {
-		page, err := pdfReader.GetPage(i)
-		if err != nil {
-			log.Printf("Warning: could not get page %d: %v", i, err)
+		page := pdfDoc.Page(i)
+		if page.V.IsNull() {
 			continue
 		}
 
-		ex, err := extractor.New(page)
-		if err != nil {
-			log.Printf("Warning: could not create extractor for page %d: %v", i, err)
-			continue
+		// Extract text content from the page
+		content := page.Content()
+		for _, text := range content.Text {
+			extractedText += text.S
 		}
-
-		text, err := ex.ExtractText()
-		if err != nil {
-			log.Printf("Warning: could not extract text from page %d: %v", i, err)
-			continue
-		}
-
-		extractedText += text + "\n"
 	}
-
 	return extractedText, nil
 }
 
-func ExtractText(path string) (string, error) {
-	if isPDF(path) {
-		return ExtractTextFromPDF(path)
-	} else if isDOCX(path) {
-		return ExtractTextFromDocx(path)
+func ExtractText(fileHeader *multipart.FileHeader) (string, error) {
+	// Open the file
+	file, err := fileHeader.Open()
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	// Read file into memory
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, file)
+	if err != nil {
+		return "", fmt.Errorf("failed to read file: %w", err)
+	}
+
+	fileBytes := buf.Bytes() // Convert to byte slice
+
+	// Determine file type and extract text
+	if isPDF(fileHeader.Filename) {
+		return ExtractTextFromPDF(fileBytes)
+	} else if isDOCX(fileHeader.Filename) {
+		return ExtractTextFromDocx(fileBytes)
 	} else {
-		return "", fmt.Errorf("unsupported file format: %s", path)
+		return "", fmt.Errorf("unsupported file format: %s", fileHeader.Filename)
 	}
 }
