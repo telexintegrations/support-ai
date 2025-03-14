@@ -28,7 +28,10 @@ func ConnectToMongo(uri, db_name string) (*mongo.Client, error) {
 	clientOptions := options.Client().ApplyURI(uri)
 	clientOptions.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
 	client, err := mongo.Connect(ctx, clientOptions)
-
+	if err != nil {
+		fmt.Println("failed to connect to mongoDB")
+		return nil, err
+	}
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		fmt.Println(err)
@@ -41,6 +44,10 @@ func ConnectToMongo(uri, db_name string) (*mongo.Client, error) {
 		collection := client.Database(dbName).Collection(ContentEmbeddingsCollection) // create a database and a dummy collection
 		// create vector index in the collection
 		_, err := collection.InsertOne(context.Background(), bson.M{"name": "init"})
+		if err != nil {
+			fmt.Println("failed to connect to mongoDB")
+			return nil, err
+		}
 		err = CreateVectorEmbeddingIndexes(collection, ctx)
 		if err != nil {
 			fmt.Println(err)
