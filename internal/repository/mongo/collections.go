@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -9,17 +10,22 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+var (
+	ErrNoOrgId                        = errors.New("no log id passed")
+	ErrFailedToReplaceExistingContext = errors.New("failed to replace existing context")
+)
+
 type Vector []float32
 
 type ContentEmbeddings struct {
-	Content   string   `bson:"content"`
+	Content   string    `bson:"content"`
 	Embedding []float32 `bson:"embedding"`
-	OrgId     string   `bson:"org_id"`
+	OrgId     string    `bson:"org_id"`
 }
 
-func (m *MongoDB)GetContentEmbeddings(ctx context.Context) ([]bson.M, error){
+func (m *MongoDB) GetContentEmbeddings(ctx context.Context) ([]bson.M, error) {
 	// Select the database inside the handler
-	
+
 	cursor, err := m.DB().Database("support-ai").Collection(ContentEmbeddingsCollection).Find(ctx, bson.M{})
 	if err != nil {
 		fmt.Println(err)
@@ -37,7 +43,7 @@ func (m *MongoDB)GetContentEmbeddings(ctx context.Context) ([]bson.M, error){
 // Expects a slice of interface containing both the content and embeddings data to be inserted into the collection
 func (m *MongoDB) InsertIntoEmbeddingCollection(ctx context.Context, content []string, embeddings [][]float32, orgId string) error {
 	if orgId == "" {
-		orgId = "018f6b36-bcc2-7d5a-b3c1-afe15c6d2"
+		return ErrNoOrgId
 	}
 
 	dataEmbeddings := make([]interface{}, len(embeddings))
@@ -73,29 +79,20 @@ func (m *MongoDB) CreateCompanyCollection(ctx context.Context, data Organization
 	return nil
 }
 
-func (m *MongoDB) SearchVectorFromContentEmbedding(ctx context.Context, queryVector []float32, limit uint32) ([]ContentEmbeddings, error) {
-	// pipeline := mongo.Pipeline{
-	// 	{{Key: "$vectorSearch", Value: bson.D{
-	// 		{Name: "index", Value: "3072support"},
-	// 		{Name: "path", Value: "embedding"},
-	// 		{Name: "queryVector", Value: queryVector},
-	// 		{Name: "numCandidates", Value: 100},
-	// 		{Name: "limit", Value: limit},
-	// 	}}},
-	// }
+func (m *MongoDB) SearchVectorFromContentEmbedding(ctx context.Context, queryVector []float32, orgId string, limit uint32) ([]ContentEmbeddings, error) {
 	fmt.Println("Vector search starting")
 
 	pipeline2 := mongo.Pipeline{
-		{
-			{Key: "$vectorSearch", Value: bson.M{
-				"index": "supportive_index",
-				"queryVector": queryVector,
-				"path": "embedding",
-				"numCandidates": 100,
-				"limit": 10,
-			}},
-		},
+		{{Key: "$vectorSearch", Value: bson.M{
+			"index":         "supportive_index",
+			"queryVector":   queryVector,
+			"path":          "embedding",
+			"numCandidates": 100,
+			"limit":         limit,
+		}}},
+		{{Key: "$match", Value: bson.M{"org_id": orgId}}},
 	}
+
 	cursor, err := m.DB().Database("support-ai").Collection(ContentEmbeddingsCollection).Aggregate(ctx, pipeline2)
 	fmt.Println("Vector search dataset returned")
 	if err != nil {
@@ -115,12 +112,54 @@ func (m *MongoDB) SearchVectorFromContentEmbedding(ctx context.Context, queryVec
 	return results, nil
 }
 
-func (m *MongoDB) DeleteOrganization(ctx context.Context, orgID string) error {
+func (m *MongoDB) deleteEntireOrganisationContext(ctx context.Context, orgID string) error {
 
-	_, err := m.DB().Database("support-ai").Collection("organizations").DeleteOne(ctx, bson.M{"org_id": orgID})
+	res, err := m.DB().Database("support-ai").Collection("organizations").DeleteMany(ctx, bson.M{"org_id": orgID})
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
+	fmt.Printf("All context for organisation with id: %s, successfully delete. And %d, vector fields where deleted\n", orgID, res.DeletedCount)
+	return nil
+}
+
+func (m *MongoDB) ReplaceEmbeddingContextTxn(ctx context.Context, newContent []string, newEmbeddings [][]float32, orgId string) error {
+	if orgId == "" {
+		return ErrNoOrgId
+	}
+
+	client := m.DB()
+	// Run mongoDB transaction
+	session, err := client.StartSession()
+	if err != nil {
+		log.Println("Error starting transaction session:", err)
+		return err
+	}
+	defer session.EndSession(ctx)
+
+	txnCallback := func(sessCtx mongo.SessionContext) (interface{}, error) {
+
+		err := m.deleteEntireOrganisationContext(sessCtx, orgId)
+		if err != nil {
+			log.Println("Error deleting old embeddings:", err)
+			return nil, err
+		}
+
+		err = m.InsertIntoEmbeddingCollection(sessCtx, newContent, newEmbeddings, orgId)
+		if err != nil {
+			log.Println("Error inserting new embeddings:", err)
+			return nil, err
+		}
+
+		return nil, nil
+	}
+
+	_, err = session.WithTransaction(ctx, txnCallback)
+	if err != nil {
+		log.Println("Transaction failed:", err)
+		return ErrFailedToReplaceExistingContext
+	}
+
+	log.Println("Successfully replaced embedding context for org:", orgId)
 	return nil
 }
