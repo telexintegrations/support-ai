@@ -110,7 +110,7 @@ var NgrokIntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://6be6-102-88-55-142.ngrok-free.app/target",
+		TargetURL: "https://0909-102-88-55-142.ngrok-free.app/target",
 		TickURL:   "",
 	},
 }
