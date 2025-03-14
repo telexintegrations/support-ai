@@ -63,7 +63,7 @@ var IntegrationJson = Integration{
 			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
 			AppLogo:         "https://raw.githubusercontent.com/samuelIkoli/Chatbot-AI-Agent/refs/heads/dev/public/home/chatbot.png",
 			AppName:         "Telex Support AI",
-			AppURL:          "https://telex.im",
+			AppURL:          "https://chatbot-ai-agent.vercel.app/",
 			BackgroundColor: "#ffff",
 		},
 		IntegrationCategory: "AI & Machine Learning",
@@ -94,7 +94,7 @@ var NgrokIntegrationJson = Integration{
 			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
 			AppLogo:         "https://raw.githubusercontent.com/samuelIkoli/Chatbot-AI-Agent/refs/heads/dev/public/home/chatbot.png",
 			AppName:         "Ngrok Support AI",
-			AppURL:          "https://telex.im",
+			AppURL:          "https://chatbot-ai-agent.vercel.app/",
 			BackgroundColor: "#ffff",
 		},
 		IntegrationCategory: "AI & Machine Learning",
@@ -110,7 +110,7 @@ var NgrokIntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://a592-102-91-71-249.ngrok-free.app/target",
+		TargetURL: "https://0909-102-88-55-142.ngrok-free.app/target"
 		TickURL:   "",
 	},
 }

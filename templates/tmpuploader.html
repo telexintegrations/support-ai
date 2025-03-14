@@ -10,16 +10,24 @@
             event.preventDefault();
 
             let formData = new FormData();
-            let textInput = document.getElementById("textInput").value.trim();
+            let prompt = document.getElementById("prompt").value.trim();
+            let fileContent = document.getElementById("file");
 
-            if (!textInput) {
+            if (!prompt) {
                 alert("Please enter some text.");
                 return;
             }
 
-            formData.append("uploadtoai", textInput);
+            let jsonData = {
+                message: prompt,
+                settings: []
+            };
 
-            fetch("/upload-documents", {
+            let jsonString = JSON.stringify(jsonData);
+            formData.append("jsonData", jsonString);
+            formData.append("file", fileContent.files[0]);
+
+            fetch("/upload", {
                 method: "POST",
                 body: formData
             })
@@ -34,9 +42,11 @@
 
 <body>
     <h2>Enter Text for AI Chatbox</h2>
-    <form id="textForm">
-        <textarea id="textInput" name="uploadtoai" required rows="5" cols="40"></textarea>
-        <br>
+    <form id="textForm" enctype="multipart/form-data">
+        <input type="file" id="file" name="file2">
+        <br><br>
+        <textarea id="prompt" name="prompt" placeholder="Enter your prompt  here"></textarea>
+        <br><br>
         <button type="submit" onclick="sendText(event)">Send</button>
     </form>
     <pre id="response"></pre>
