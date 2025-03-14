@@ -8,7 +8,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-type AIService interface{
+type AIService interface {
 	GetAIResponse(message string) (string, error)
 	GetGeminiEmbedding(text string) ([]float32, error)
 	FineTunedResponse(message string, db_response string) (string, error)
@@ -34,7 +34,7 @@ func NewAIService(apiKey string) (AIService, error) {
 	return &AIServiceImpl{client: client}, nil
 }
 
-func (a *AIServiceImpl)GetAIResponse(message string) (string, error) {
+func (a *AIServiceImpl) GetAIResponse(message string) (string, error) {
 
 	ctx := context.Background()
 	model := a.client.GenerativeModel("models/gemini-1.5-flash-latest")
@@ -56,22 +56,20 @@ func (a *AIServiceImpl)GetAIResponse(message string) (string, error) {
 	return "", fmt.Errorf("unexpected response format")
 }
 
+func (a *AIServiceImpl) GetGeminiEmbedding(text string) ([]float32, error) {
 
-func (a *AIServiceImpl)GetGeminiEmbedding(text string) ([]float32, error) {
+	ctx := context.Background()
+	model := a.client.EmbeddingModel("gemini-embedding-exp-03-07") // Use an embedding model
 
-    ctx := context.Background()
-    model := a.client.EmbeddingModel("gemini-embedding-exp-03-07") // Use an embedding model
+	res, err := model.EmbedContent(ctx, genai.Text(text))
+	if err != nil {
+		return nil, err
+	}
 
-    res, err := model.EmbedContent(ctx, genai.Text(text))
-    if err != nil {
-        return nil, err
-    }
-
-    return res.Embedding.Values, nil
+	return res.Embedding.Values, nil
 }
 
-
-func (a *AIServiceImpl)FineTunedResponse(message, db_response string) (string, error) {
+func (a *AIServiceImpl) FineTunedResponse(message, db_response string) (string, error) {
 
 	newPrompt := `You are a support AI bot designed to assist users by providing accurate and precise answers to frequently asked questions (FAQs).
 	Instructions for Response Generation:
@@ -81,7 +79,8 @@ func (a *AIServiceImpl)FineTunedResponse(message, db_response string) (string, e
 	Do NOT Guess or Generate False Information:
 	If the question is not covered in the provided knowledge base, do not attempt to generate an answer.
 	Instead, respond with the following message:
-	'I'm sorry, but I do not have an answer for that at the moment. Please contact the admin or refer to our official support channels for further assistance.'
+	Strictly: 'Hi there, please be patient I don't have a response to your query right now but we have created a ticket for your query and it would be handled shortly.'
+	However if you access the message and it's vague give them an opportunity to make a better query.
 	Plain Text Responses Only:
 	Do not format responses using markdown, bullet points, html tags, or code blocks.
 	Ensure all responses are returned as plain text only for compatibility with the support system.
