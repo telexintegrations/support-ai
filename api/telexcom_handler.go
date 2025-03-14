@@ -24,13 +24,20 @@ func processQuery(query string) (string, string) {
 		remainingContent = strings.TrimPrefix(query, "/help")
 		task = "/help"
 		fmt.Println("Processing help with:", strings.TrimSpace(remainingContent))
+	} else if strings.HasPrefix(query, "/change-contex") {
+		remainingContent = strings.TrimPrefix(query, "/change-context")
+		task = "/change-context"
+		fmt.Println("Processing /change-context:", strings.TrimSpace(remainingContent))
+	} else if strings.HasPrefix(query, "Use") {
+		task = ""
 	} else {
 		remainingContent = query
-		task = ""
-		// fmt.Println("Invalid command or unrecognized query.")
+		task = "use"
 	}
 	return remainingContent, task
 }
+
+var lastResponseToTelex string
 
 // sendIntegrationJson returns the integration.json required by telex
 func (s *Server) sendIntegrationJson(ctx *gin.Context) {
@@ -43,9 +50,8 @@ func (s *Server) sendNgrokJson(ctx *gin.Context) {
 }
 
 func (s *Server) receiveChatQueries(ctx *gin.Context) {
-	
+
 	var req telexcom.TelexChatPayload
-	txc := telexcom.NewTelexCom()
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		slog.Error("Invalid payload", "error", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -53,70 +59,118 @@ func (s *Server) receiveChatQueries(ctx *gin.Context) {
 		})
 		return
 	}
-
+	if lastResponseToTelex == req.Message {
+		ctx.Status(http.StatusAccepted)
+		return
+	}
+	txc := telexcom.NewTelexCom()
 	p := bluemonday.StrictPolicy()
-
 	userQuery := p.Sanitize(req.Message)
+
 	var task string
 	userQuery, task = processQuery(userQuery)
 
-	if task == "/upload"{
+	switch task {
+	case "/upload":
 		chunks := format.ChunkTextByParagraph(userQuery, 20)
 		var embedded_chunks [][]float32
-		for _, chunk := range chunks{
+		for _, chunk := range chunks {
 			chunk_embedding, err := s.AIService.GetGeminiEmbedding(chunk)
-			if err != nil{
+			if err != nil {
 				fmt.Println(err)
+				lastResponseToTelex = "sorry, couldn't process your upload"
+				go txc.GenerateResponseToQuery(ctx, lastResponseToTelex, req.ChannelID)
 			}
 			embedded_chunks = append(embedded_chunks, chunk_embedding)
 		}
-	
-		err := s.DB.InsertIntoEmbeddingCollection(ctx, chunks, embedded_chunks, "")
-		if err != nil{
+
+		err := s.DB.InsertIntoEmbeddingCollection(ctx, chunks, embedded_chunks, req.ChannelID)
+		if err != nil {
 			go txc.GenerateResponseToQuery(ctx, "Error uploading", req.ChannelID)
-		}else{
-			go txc.GenerateResponseToQuery(ctx, "Content Uploaded, you can use /help to send queries", req.ChannelID)
+		} else {
+			lastResponseToTelex = "Content Uploaded, you can use /help to send queries"
+			go txc.GenerateResponseToQuery(ctx, lastResponseToTelex, req.ChannelID)
 		}
-	}else if task == ""{
-		return
-	}else{
+	case "/help":
 		query_embedding, err := s.AIService.GetGeminiEmbedding(userQuery)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err)
+			lastResponseToTelex = "sorry couldn't process your query"
+			go txc.GenerateResponseToQuery(ctx, lastResponseToTelex, req.ChannelID)
+			return
 		}
-		// fmt.Printf("query_embedding is: %v", query_embedding)
-		//vector search
-		db_raw, _ := s.DB.SearchVectorFromContentEmbedding(ctx, query_embedding, 3)
+
+		db_raw, err := s.DB.SearchVectorFromContentEmbedding(ctx, query_embedding, req.ChannelID, 10)
+		if err != nil {
+			fmt.Println(err)
+			lastResponseToTelex = "sorry couldn't process your query"
+			go txc.GenerateResponseToQuery(ctx, lastResponseToTelex, req.ChannelID)
+			return
+		}
 		var db_response string
-		for _, res := range db_raw{
+		for _, res := range db_raw {
 			db_response += res.Content
 		}
 		fmt.Println("Vector search completed")
 
-  
-	  	// db_response := string(jsonData)
-		fmt.Printf("db_response is: %s",db_response)
+		fmt.Printf("db_response is: %s", db_response)
 		//fine tune response
 		ai_response, err := s.AIService.FineTunedResponse(userQuery, db_response)
-		
+		if err != nil {
+			fmt.Println("failed to generate AI response")
+			lastResponseToTelex = "sorry couldn't process your query"
+			go txc.GenerateResponseToQuery(ctx, lastResponseToTelex, req.ChannelID)
+		}
 		//post to telex
-		go txc.GenerateResponseToQuery(ctx, ai_response, req.ChannelID)
+		lastResponseToTelex = ai_response
+		go txc.GenerateResponseToQuery(ctx, lastResponseToTelex, req.ChannelID)
+	case "/change-context":
+		chunks := format.ChunkTextByParagraph(userQuery, 20)
+		var embedded_chunks [][]float32
+		for _, chunk := range chunks {
+			chunk_embedding, err := s.AIService.GetGeminiEmbedding(chunk)
+			fmt.Println(chunk_embedding)
+			if err != nil {
+				fmt.Println(err)
+				lastResponseToTelex = "sorry, couldn't process your upload"
+				go txc.GenerateResponseToQuery(ctx, lastResponseToTelex, req.ChannelID)
+			}
+			embedded_chunks = append(embedded_chunks, chunk_embedding)
+		}
+
+		err := s.DB.ReplaceEmbeddingContextTxn(ctx, chunks, embedded_chunks, req.ChannelID)
+		if err != nil {
+			lastResponseToTelex = "Error uploading"
+			go txc.GenerateResponseToQuery(ctx, lastResponseToTelex, req.ChannelID)
+		} else {
+			lastResponseToTelex = "Content Uploaded you can use /help to send queries"
+			go txc.GenerateResponseToQuery(ctx, lastResponseToTelex, req.ChannelID)
+		}
+	case "use":
+		go txc.GenerateResponseToQuery(ctx,
+			`Use:\n/upload followed by your text to upload context
+/help followed by a query to interact with AI
+/change-context followed by text/document to change the AI's Knowledge base`,
+			req.ChannelID)
+	default:
+		ctx.Status(202)
+		return
+
 	}
 	ctx.Status(202)
 
 }
 
-func (s *Server) FetchEmbeddings(ctx *gin.Context){
+func (s *Server) FetchEmbeddings(ctx *gin.Context) {
 	results, _ := s.DB.GetContentEmbeddings(ctx)
 	jsonData, err := json.Marshal(results)
 	if err != nil {
 		// panic(err)
 		fmt.Printf("error is:%v", err)
-   }
-   response := string(jsonData)
-   fmt.Printf("response from the db is: %s",response)
+	}
+	response := string(jsonData)
+	fmt.Printf("response from the db is: %s", response)
 	ctx.JSON(200, gin.H{
 		"message": response,
 	})
 }
-
