@@ -23,7 +23,7 @@ type Server struct {
 	EnvVar    *EnvConfig
 	Router    *gin.Engine
 	AIService aicom.AIService
-	DB *mongoClient.MongoDB
+	DB        *mongoClient.MongoDB
 }
 
 func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {
@@ -38,7 +38,7 @@ func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {
 		EnvVar:    envVar,
 		Router:    nil,
 		AIService: aiservice,
-		DB: dbService,
+		DB:        dbService,
 	}
 }
 
@@ -66,7 +66,10 @@ func (s *Server) SetupRouter() error {
 	r.OPTIONS("/*any", func(ctx *gin.Context) {
 		ctx.Status(http.StatusNoContent)
 	})
-
+	// Serve Swagger UI static files
+	r.Static("/swaggerui", "./static/swagger")
+	// Download the Swagger File
+	r.StaticFile("/swagger.yaml", "./static/swagger.yaml")
 	r.Use(cors.New(corsConfig))
 	r.LoadHTMLGlob("templates/*")
 	r.GET("/", func(ctx *gin.Context) {
