@@ -9,6 +9,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/telexintegrations/support-ai/aicom"
+	"github.com/telexintegrations/support-ai/internal/repository"
 	mongoClient "github.com/telexintegrations/support-ai/internal/repository/mongo"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -23,16 +24,17 @@ type Server struct {
 	EnvVar    *EnvConfig
 	Router    *gin.Engine
 	AIService aicom.AIService
-	DB        *mongoClient.MongoDB
+	DB        repository.VectorRepo
 }
 
 func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {
+	// Setup needed services...
 	dbService := mongoClient.NewDBService(db)
 	aiservice, _ := aicom.NewAIService(envVar.GenaiAPIKey)
-	if aiservice == nil {
+	if aiservice == nil || dbService == nil {
 		fmt.Println("Unable to instantiate AI client")
 	} else {
-		fmt.Println("AI client initiated")
+		fmt.Println("AI & Repository Service Running")
 	}
 	return &Server{
 		EnvVar:    envVar,

@@ -8,8 +8,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/telexintegrations/support-ai/internal/repository"
-	dbinterface "github.com/telexintegrations/support-ai/internal/repository/dbInterface"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -54,8 +52,6 @@ func ConnectToMongo(uri, db_name string) (*mongo.Client, error) {
 			return nil, err
 		}
 	}
-
-	repository.DB.Mongo = NewMongoManager(client)
 	fmt.Println("Database Connection successful")
 	return client, nil
 }
@@ -66,12 +62,6 @@ func checkDBExists(client *mongo.Client, dbName string) bool {
 		return false
 	}
 	return slices.Contains(databases, dbName)
-}
-
-func NewMongoManager(client *mongo.Client) dbinterface.MongoManager {
-	return &MongoDB{
-		MongoClient: client,
-	}
 }
 
 func CreateVectorEmbeddingIndexes(coll *mongo.Collection, ctx context.Context) error {

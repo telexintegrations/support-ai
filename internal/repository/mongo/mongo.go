@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/telexintegrations/support-ai/internal/repository"
+	"github.com/telexintegrations/support-ai/internal/repository/dbmodel"
 	"go.mongodb.org/mongo-driver/mongo"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -17,13 +19,9 @@ var (
 
 type Vector []float32
 
-type ContentEmbeddings struct {
-	Content   string    `bson:"content"`
-	Embedding []float32 `bson:"embedding"`
-	OrgId     string    `bson:"org_id"`
-}
+var _ repository.VectorRepo = (*MongoDB)(nil)
 
-func (m *MongoDB) GetContentEmbeddings(ctx context.Context) ([]bson.M, error) {
+func (m *MongoDB) GetContentEmbeddings(ctx context.Context) ([]dbmodel.ContentEmbeddings, error) {
 	// Select the database inside the handler
 
 	cursor, err := m.DB().Database("support-ai").Collection(ContentEmbeddingsCollection).Find(ctx, bson.M{})
@@ -31,28 +29,28 @@ func (m *MongoDB) GetContentEmbeddings(ctx context.Context) ([]bson.M, error) {
 		fmt.Println(err)
 		return nil, err
 	}
-	var response []bson.M
-	if err := cursor.All(ctx, &response); err != nil {
+	var results []dbmodel.ContentEmbeddings
+	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
 
-	return response, nil
+	return results, nil
 
 }
 
 // Expects a slice of interface containing both the content and embeddings data to be inserted into the collection
-func (m *MongoDB) InsertIntoEmbeddingCollection(ctx context.Context, content []string, embeddings [][]float32, orgId string) error {
-	if orgId == "" {
+func (m *MongoDB) InsertIntoEmbeddingCollection(ctx context.Context, content []string, embeddings [][]float32, orgData dbmodel.OrgMetaData) error {
+	if orgData.ID == "" {
 		return ErrNoOrgId
 	}
 
 	dataEmbeddings := make([]interface{}, len(embeddings))
 
 	for i, data := range content {
-		dataEmbeddings[i] = ContentEmbeddings{
+		dataEmbeddings[i] = dbmodel.ContentEmbeddings{
 			Content:   data,
 			Embedding: embeddings[i],
-			OrgId:     orgId,
+			OrgId:     orgData.ID,
 		}
 	}
 	_, err := m.DB().Database("support-ai").Collection(ContentEmbeddingsCollection).InsertMany(ctx, dataEmbeddings)
@@ -64,13 +62,9 @@ func (m *MongoDB) InsertIntoEmbeddingCollection(ctx context.Context, content []s
 	return nil
 }
 
-type Organization struct {
-	ID string `bson:"org_id"`
-}
-
-func (m *MongoDB) CreateCompanyCollection(ctx context.Context, data Organization) error {
+func (m *MongoDB) CreateCompanyCollection(ctx context.Context, data dbmodel.OrgMetaData) error {
 	// TODO are we creating collections for each org?
-	_, err := m.DB().Database("support-ai").Collection("organizations").InsertOne(ctx, data)
+	_, err := m.DB().Database("support-ai").Collection("organizations").InsertOne(ctx, data.ID)
 
 	if err != nil {
 		fmt.Println(err)
@@ -79,7 +73,7 @@ func (m *MongoDB) CreateCompanyCollection(ctx context.Context, data Organization
 	return nil
 }
 
-func (m *MongoDB) SearchVectorFromContentEmbedding(ctx context.Context, queryVector []float32, orgId string, limit uint32) ([]ContentEmbeddings, error) {
+func (m *MongoDB) SearchVectorFromContentEmbedding(ctx context.Context, queryVector []float32, orgData dbmodel.OrgMetaData, limit uint32) ([]dbmodel.ContentEmbeddings, error) {
 	fmt.Println("Vector search starting")
 
 	pipeline2 := mongo.Pipeline{
@@ -90,7 +84,7 @@ func (m *MongoDB) SearchVectorFromContentEmbedding(ctx context.Context, queryVec
 			"numCandidates": 100,
 			"limit":         limit,
 		}}},
-		{{Key: "$match", Value: bson.M{"org_id": orgId}}},
+		{{Key: "$match", Value: bson.M{"org_id": orgData.ID}}},
 	}
 
 	cursor, err := m.DB().Database("support-ai").Collection(ContentEmbeddingsCollection).Aggregate(ctx, pipeline2)
@@ -101,7 +95,7 @@ func (m *MongoDB) SearchVectorFromContentEmbedding(ctx context.Context, queryVec
 	}
 	defer cursor.Close(ctx)
 
-	var results []ContentEmbeddings
+	var results []dbmodel.ContentEmbeddings
 	fmt.Println("Decoding Vector search results")
 	if err := cursor.All(ctx, &results); err != nil {
 		log.Println("Error decoding search results:", err)
@@ -123,13 +117,13 @@ func (m *MongoDB) deleteEntireOrganisationContext(ctx context.Context, orgID str
 	return nil
 }
 
-func (m *MongoDB) ReplaceEmbeddingContextTxn(ctx context.Context, newContent []string, newEmbeddings [][]float32, orgId string) error {
-	if orgId == "" {
+func (m *MongoDB) ReplaceEmbeddingContextTxn(ctx context.Context, newContent []string, newEmbeddings [][]float32, orgData dbmodel.OrgMetaData) error {
+	if orgData.ID == "" {
 		return ErrNoOrgId
 	}
 
+	orgId := orgData.ID
 	client := m.DB()
-	// Run mongoDB transaction
 	session, err := client.StartSession()
 	if err != nil {
 		log.Println("Error starting transaction session:", err)
@@ -145,7 +139,7 @@ func (m *MongoDB) ReplaceEmbeddingContextTxn(ctx context.Context, newContent []s
 			return nil, err
 		}
 
-		err = m.InsertIntoEmbeddingCollection(sessCtx, newContent, newEmbeddings, orgId)
+		err = m.InsertIntoEmbeddingCollection(sessCtx, newContent, newEmbeddings, orgData)
 		if err != nil {
 			log.Println("Error inserting new embeddings:", err)
 			return nil, err

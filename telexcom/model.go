@@ -110,7 +110,7 @@ var NgrokIntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://c24b-102-88-55-142.ngrok-free.app/target",
+		TargetURL: "https://a592-102-91-71-249.ngrok-free.app/target",
 		TickURL:   "",
 	},
 }
@@ -139,5 +139,3 @@ type TelexResponsePayload struct {
 	EventName string `json:"event_name"`
 	Status    string `json:"status"`
 }
-
-
