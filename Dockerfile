@@ -8,4 +8,4 @@ WORKDIR /data/db
 EXPOSE 27017
 
 # Start MongoDB when the container runs
-CMD ["mongod", "--bind_ip_all", "--setParameter", "featureFlagSearchIndexes=true"]
+CMD ["mongod", "--bind_ip_all"]
