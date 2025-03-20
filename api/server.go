@@ -23,7 +23,7 @@ type Server struct {
 	EnvVar    *EnvConfig
 	Router    *gin.Engine
 	AIService aicom.AIService
-	DB *mongoClient.MongoDB
+	DB        *mongoClient.MongoDB
 }
 
 func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {
@@ -38,7 +38,7 @@ func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {
 		EnvVar:    envVar,
 		Router:    nil,
 		AIService: aiservice,
-		DB: dbService,
+		DB:        dbService,
 	}
 }
 
