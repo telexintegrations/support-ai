@@ -4,67 +4,113 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
+	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/telexintegrations/support-ai/aicom"
+	"github.com/telexintegrations/support-ai/internal/repository"
+)
+
+var (
+	ErrChannelIdNotExist          = errors.New("no channel id provided")
+	ErrFailedToPostMessageToTelex = errors.New("failed to send message to telex")
 )
 
 const (
-	BaseTelexAPIProduction = "https://api.telex.im/api/v1/"
-	BaseTelexAPIStaging    = "https://api.staging.telex.im/api/v1/"
+	telexWebhookBase         = "https://ping.telex.im/v1/webhooks"
+	failedToProcessQueryMsg  = "sorry couldn't process your query, try again"
+	failedToProcessUploadMsg = "sorry, failed to process your upload, try again"
+	successUploadMsg         = "Content Uploaded, you can use /help to send queries"
+	caseUpload               = "/upload"
+	caseHelp                 = "/help"
+	caseChangeContext        = "/change-context"
+	caseUse                  = "use"
 )
 
 type TelexCom struct {
-	// Have the AI interface,
-	// Have the Repository interface
+	aisvc      aicom.AIService
+	db         repository.VectorRepo
+	httpClient http.Client
 }
 
-func NewTelexCom() *TelexCom {
-	return &TelexCom{}
+var lastMessageToTelex string
+
+func NewTelexCom(aiservice aicom.AIService, dbinterface repository.VectorRepo, client http.Client) *TelexCom {
+	return &TelexCom{
+		aisvc:      aiservice,
+		db:         dbinterface,
+		httpClient: client,
+	}
 }
 
-func (txc *TelexCom) GenerateResponseToQuery(ctx context.Context, response, channelID string) error {
-	// TODO: refactor this function, write tests
-	fmt.Println("Generating response to telex")
-
-	if channelID == ""{
-		channelID = "01956858-b67d-7654-80cd-68abd43b57f2"
+func (txc *TelexCom) SendMessageToTelex(ctx context.Context, messaage, channelID string) error {
+	if channelID == "" {
+		return ErrChannelIdNotExist
 	}
 
 	respPayload := gin.H{
-		"message": response,
-		"username": "Support AI",
-        "event_name": "Query Support",
-        "status": "success",
+		"message":    messaage,
+		"username":   "Support AI",
+		"event_name": "Query Support",
+		"status":     "success",
 	}
 
-	url := fmt.Sprintf("https://ping.telex.im/v1/webhooks/%s", channelID)
-	// fmt.Println(url)
+	url := fmt.Sprintf("%s/%s", telexWebhookBase, channelID)
 
 	data, err := json.Marshal(respPayload)
 	if err != nil {
 		fmt.Printf("error marshalling struct: %v\n", err)
 	}
-	// reader := bytes.NewReader(data)
-	fmt.Println(string(data))
-	client := http.Client{
-		Timeout: 10 * time.Second,
-	}
-	fmt.Println("Posting to telex")
-	
-	res, err := client.Post(url, "application/json", bytes.NewBuffer(data))
-	fmt.Println("Posted to telex")
+
+	slog.Info("posting message to telex")
+	res, err := txc.httpClient.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		fmt.Printf("error sending POST request to Telex: %v\n", err)
+		return ErrFailedToPostMessageToTelex
 	}
+	slog.Info("posted message to telex successfully")
 	defer res.Body.Close()
+	return nil
+}
 
-	body, _ := io.ReadAll(res.Body)
-	fmt.Println("Response from telex is: ", string(body))
-	// slog.Info("Sent error log to telex")
+func (txc *TelexCom) ProcessTelexInputRequest(ctx context.Context, req TelexChatPayload) error {
+	if lastMessageToTelex == req.Message {
+		return nil // no need to process message
+	}
 
+	p := bluemonday.StrictPolicy()
+	userQuery := p.Sanitize(req.Message)
+	if lastMessageToTelex == userQuery {
+		return nil // no need to process message
+	}
+	fmt.Println(lastMessageToTelex, req.Message, "this teling message")
+	htmlStrippedQuery, task := processQuery(userQuery)
+
+	switch task {
+	case caseUpload:
+		err := txc.processUploadCmd(ctx, htmlStrippedQuery, req.ChannelID)
+		if err != nil {
+			return err
+		}
+	case caseHelp:
+		err := txc.processHelpCmd(ctx, htmlStrippedQuery, req.ChannelID)
+		if err != nil {
+			return err
+		}
+	case caseUse:
+		err := txc.processManualMsg(ctx, req.ChannelID)
+		if err != nil {
+			return err
+		}
+	case caseChangeContext:
+		err := txc.processChangeContextCmd(ctx, htmlStrippedQuery, req.ChannelID)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

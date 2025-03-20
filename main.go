@@ -27,15 +27,15 @@ func main() {
 		fmt.Println(err)
 		panic(err)
 	}
-	db, err := mongo.ConnectToMongo(config.MONGODB_DEV_URI, config.MONGODATABASE_NAME)
-
+	dbClient, err := mongo.ConnectToMongo(config.MONGODB_DEV_URI, config.MONGODATABASE_NAME)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer func() {
-		db.Disconnect(context.Background())
+		dbClient.Disconnect(context.Background())
 	}()
-	server := api.NewServer(&config, db)
+
+	server := api.NewServer(&config, dbClient)
 	server.StartServer(":8080")
 }
