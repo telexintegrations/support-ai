@@ -66,7 +66,10 @@ func (s *Server) SetupRouter() error {
 	r.OPTIONS("/*any", func(ctx *gin.Context) {
 		ctx.Status(http.StatusNoContent)
 	})
-
+	// Serve Swagger UI static files
+	r.Static("/swaggerui", "./static/swagger")
+	// Download the Swagger File
+	r.StaticFile("/swagger.yaml", "./static/swagger.yaml")
 	r.Use(cors.New(corsConfig))
 	r.LoadHTMLGlob("templates/*")
 	r.GET("/", func(ctx *gin.Context) {
@@ -74,6 +77,7 @@ func (s *Server) SetupRouter() error {
 	})
 	r.GET("/test-db", s.FetchEmbeddings)
 	r.GET("/upload", s.uploadPage)
+	r.POST("/upload", s.UploadFiles)
 	r.GET("/integration.json", s.sendIntegrationJson)
 	r.GET("/ngrok.json", s.sendNgrokJson)
 	r.POST("/target", s.receiveChatQueries)

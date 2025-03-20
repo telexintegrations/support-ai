@@ -1,0 +1,130 @@
+openapi: 3.0.0
+info:
+  title: Telex Support AI Agent
+  description: API documentation for Telex Support AI Agent.
+  version: 1.0.0
+servers:
+  - url: "https://support-ai-hsd0.onrender.com"
+
+paths:
+  /integration.json:
+    get:
+      summary: Get Integration JSON
+      description: Returns the integration JSON configuration.
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      date:
+                        type: object
+                        properties:
+                          created_at:
+                            type: string
+                            example: "2025-03-05"
+                          updated_at:
+                            type: string
+                            example: "2025-03-05"
+                      descriptions:
+                        type: object
+                        properties:
+                          app_description:
+                            type: string
+                            example: "The support assistant for your organisation. Reply FAQs, check documentation and thrive"
+                          app_logo:
+                            type: string
+                            example: "https://raw.githubusercontent.com/samuelIkoli/Chatbot-AI-Agent/refs/heads/dev/public/home/chatbot.png"
+                          app_name:
+                            type: string
+                            example: "Telex Support AI"
+                          app_url:
+                            type: string
+                            example: "https://telex.im"
+                          background_color:
+                            type: string
+                            example: "#ffff"
+                      integration_category:
+                        type: string
+                        example: "AI & Machine Learning"
+                      integration_type:
+                        type: string
+                        example: "interval"
+                      is_active:
+                        type: boolean
+                        example: true
+                      key_features:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Gives apt responses to FAQs.", "Sends users response based on data stored in database."]
+                      author:
+                        type: string
+                        example: "TSA team hng12"
+                      settings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            label:
+                              type: string
+                              example: "support-channel-id"
+                            type:
+                              type: string
+                              example: "text"
+                            required:
+                              type: boolean
+                              example: true
+                            default:
+                              type: string
+                              example: ""
+                      target_url:
+                        type: string
+                        example: "https://support-ai-hsd0.onrender.com/target"
+                      tick_url:
+                        type: string
+                        example: ""
+  /target:
+    post:
+      summary: Send a message to Telex AI
+      description: Sends a chat message from Telex channel with settings to the AI integration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                channel_id:
+                  type: string
+                  description: "Example channel ID. Replace this with a valid Telex channel ID."
+                  example: "018f6b36-bcc2-7d5a-b3c1-afe15c6d2"
+                message:
+                  type: string
+                  example: "/help Hello, how can I reset my password?"
+                settings:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      label:
+                        type: string
+                        example: "support-channel-id"
+                      type:
+                        type: string
+                        example: "text"
+                      required:
+                        type: boolean
+                        example: true
+                      default:
+                        type: string
+                        example: ""
+      responses:
+        "202":
+          description: Message processed successfully
+         
