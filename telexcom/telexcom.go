@@ -87,7 +87,6 @@ func (txc *TelexCom) ProcessTelexInputRequest(ctx context.Context, req TelexChat
 	if lastMessageToTelex == userQuery {
 		return nil // no need to process message
 	}
-	fmt.Println(lastMessageToTelex, req.Message, "this teling message")
 	htmlStrippedQuery, task := processQuery(userQuery)
 
 	switch task {
