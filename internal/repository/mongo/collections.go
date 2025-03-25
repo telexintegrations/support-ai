@@ -23,6 +23,7 @@ type ContentEmbeddings struct {
 	OrgId     string    `bson:"org_id"`
 }
 
+// Deprecated: This function as officially been deprecated and is no longer used for getting content embeddings Use GetChromaContentEmbeddings instead
 func (m *MongoDB) GetContentEmbeddings(ctx context.Context) ([]bson.M, error) {
 	// Select the database inside the handler
 
@@ -40,7 +41,7 @@ func (m *MongoDB) GetContentEmbeddings(ctx context.Context) ([]bson.M, error) {
 
 }
 
-// Expects a slice of interface containing both the content and embeddings data to be inserted into the collection
+// Deprecated: This function as officially been deprecated and is no longer used for inserting embeddings Use InsertIntoChromaEmbeddingCollection instead
 func (m *MongoDB) InsertIntoEmbeddingCollection(ctx context.Context, content []string, embeddings [][]float32, orgId string) error {
 	if orgId == "" {
 		return ErrNoOrgId
@@ -79,6 +80,7 @@ func (m *MongoDB) CreateCompanyCollection(ctx context.Context, data Organization
 	return nil
 }
 
+// Deprecated: This function as officially been deprecated and is no longer used for searching vector embeddings Use SearchVectorFromChromaContentEmbedding instead
 func (m *MongoDB) SearchVectorFromContentEmbedding(ctx context.Context, queryVector []float32, orgId string, limit uint32) ([]ContentEmbeddings, error) {
 	fmt.Println("Vector search starting")
 
@@ -123,6 +125,7 @@ func (m *MongoDB) deleteEntireOrganisationContext(ctx context.Context, orgID str
 	return nil
 }
 
+// Deprecated: This function as officially been deprecated and is no longer used for Replacing Embedding context embeddings Use ReplaceChromaEmbeddingContextTxn instead
 func (m *MongoDB) ReplaceEmbeddingContextTxn(ctx context.Context, newContent []string, newEmbeddings [][]float32, orgId string) error {
 	if orgId == "" {
 		return ErrNoOrgId

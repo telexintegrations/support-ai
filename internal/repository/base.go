@@ -6,7 +6,8 @@ import (
 )
 
 type DatabaseManager struct {
-	Mongo dbinterface.MongoManager
+	Mongo  dbinterface.MongoManager
+	Chroma dbinterface.ChromaManager
 }
 
 var DB = DatabaseManager{}

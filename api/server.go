@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	chromago "github.com/amikos-tech/chroma-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/telexintegrations/support-ai/aicom"
@@ -24,6 +25,7 @@ type Server struct {
 	Router    *gin.Engine
 	AIService aicom.AIService
 	DB        *mongoClient.MongoDB
+	CDB       *chromago.Client
 }
 
 func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {

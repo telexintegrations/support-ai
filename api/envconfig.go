@@ -15,6 +15,7 @@ type EnvConfig struct {
 	MONGO_USERNAME     string `mapstructure:"MONGO_USERNAME"`
 	MONGO_PASSWORD     string `mapstructure:"MONGO_PASSWORD"`
 	MONGODATABASE_NAME string `mapstructure:"MONGODATABASE_NAME"`
+	CHROMADB_DEV_URI   string `mapstructure:"CHROMA_DEV_URI"`
 }
 
 var (
@@ -35,9 +36,9 @@ func LoadEnvConfig() (EnvConfig, error) {
 
 	if !isProduction {
 		// Load .env file in non-production environments
-		viper.SetConfigName(".env")  
-		viper.SetConfigType("env")  
-		viper.AddConfigPath(".")    
+		viper.SetConfigName(".env")
+		viper.SetConfigType("env")
+		viper.AddConfigPath(".")
 
 		// Attempt to read config file
 		if err := viper.ReadInConfig(); err != nil {
@@ -63,10 +64,10 @@ func LoadEnvConfig() (EnvConfig, error) {
 		db_password := os.Getenv("MONGO_PASSWORD")
 		db_name := os.Getenv("MONGODATABASE_NAME")
 		envConfig = EnvConfig{
-			GenaiAPIKey: apikey,
-			MONGODB_DEV_URI: uri,
-			MONGO_USERNAME: db_username,
-			MONGO_PASSWORD: db_password,
+			GenaiAPIKey:        apikey,
+			MONGODB_DEV_URI:    uri,
+			MONGO_USERNAME:     db_username,
+			MONGO_PASSWORD:     db_password,
 			MONGODATABASE_NAME: db_name,
 		}
 	}
