@@ -45,7 +45,6 @@ func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {
 }
 
 func (s *Server) SetupRouter() error {
-	// Define and setup all routes and middleware here
 	if s.Router != nil {
 		return ErrRouterSetAlready
 	}
