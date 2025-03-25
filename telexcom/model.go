@@ -121,11 +121,6 @@ type MonitorPayload struct {
 	Settings  []interface{} `json:"settings,omitempty"`
 }
 
-//TODO: clear this from here
-// type PromptPayload struct {
-// 	PathURL  string `json:"path_url,omitempty"`
-// 	Question string `json:"question,omitempty"`
-// }
 
 type TelexChatPayload struct {
 	ChannelID string               `json:"channel_id,omitempty"`

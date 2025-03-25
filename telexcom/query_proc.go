@@ -17,7 +17,7 @@ func processQuery(query string) (string, string) {
 		remainingContent = strings.TrimPrefix(query, "/help")
 		task = "/help"
 		fmt.Println("Processing help with:", strings.TrimSpace(remainingContent))
-	} else if strings.HasPrefix(queryToLower, "/change-contex") {
+	} else if strings.HasPrefix(queryToLower, "/change-context") {
 		remainingContent = strings.TrimPrefix(query, "/change-context")
 		task = "/change-context"
 		fmt.Println("Processing /change-context:", strings.TrimSpace(remainingContent))

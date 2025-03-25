@@ -113,3 +113,30 @@ func (txc *TelexCom) ProcessTelexInputRequest(ctx context.Context, req TelexChat
 	}
 	return nil
 }
+
+func (txc *TelexCom) ProcessTelexUpload(ctx context.Context, extractedText string, req TelexChatPayload) error {
+	err := txc.processUploadCmd(ctx, extractedText, req.ChannelID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (txc *TelexCom) ProcessTelexQuery(ctx context.Context, req TelexChatPayload) error {
+	if lastMessageToTelex == req.Message {
+		return nil // no need to process message
+	}
+
+	p := bluemonday.StrictPolicy()
+	userQuery := p.Sanitize(req.Message)
+	if lastMessageToTelex == userQuery {
+		return nil // no need to process message
+	}
+	htmlStrippedQuery, _ := processQuery(userQuery)
+
+	err := txc.processUploadCmd(ctx, htmlStrippedQuery, req.ChannelID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

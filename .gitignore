@@ -12,3 +12,4 @@ tmp
 .DS_Store
 .air.toml
 .env
+tmp/

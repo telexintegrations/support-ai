@@ -15,15 +15,25 @@ func FormatResponse(data interface{}) ([]byte, error) {
 }
 
 func CleanText(text string) string {
+	// Remove non-printable characters
+	re := regexp.MustCompile(`[\x00-\x1F\x7F]+`)
+	text = re.ReplaceAllString(text, " ")
+
+	// Fix concatenated words (handles letters and numbers)
+	reSpaces := regexp.MustCompile(`([a-zA-Z])([0-9])|([0-9])([a-zA-Z])|([a-z])([A-Z])`)
+	text = reSpaces.ReplaceAllString(text, `$1$3$5 $2$4$6`)
+
+	// Replace multiple spaces with a single space
 	text = regexp.MustCompile(`\s+`).ReplaceAllString(text, " ")
 
-	text = strings.ReplaceAll(text, "\n", " ")
+	// Restore paragraph spacing (ensure double line breaks are preserved)
+	text = regexp.MustCompile(`\n\n+`).ReplaceAllString(text, "\n\n")
 
+	// Trim leading/trailing spaces
 	text = strings.TrimSpace(text)
 
 	return text
 }
-
 
 func ChunkTextByParagraph(text string, maxWords int) []string {
 	// ChunkTextByParagraph splits text into meaningful chunks while preserving sentence boundaries.
