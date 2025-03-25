@@ -16,8 +16,6 @@ import (
 
 func (s *Server) UploadFiles(ctx *gin.Context) {
 
-	// var return_response string
-	// txc := telexcom.NewTelexCom()
 	var userQuery string
 	var req telexcom.TelexChatPayload
 	contentType := ctx.GetHeader("Content-Type")
@@ -84,9 +82,6 @@ func (s *Server) UploadFiles(ctx *gin.Context) {
 		}
 		userQuery = p.Sanitize(req.Message)
 	}
-
-	userQuery, task = processQuery(userQuery)
-	fmt.Printf("Task is: %s", task)
 	ctx.JSON(200, gin.H{
 		"event_name": task,
 		"message":    userQuery,

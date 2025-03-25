@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"github.com/telexintegrations/support-ai/internal/repository"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -16,7 +17,7 @@ func (m *MongoDB) DB() *mongo.Client {
 	return m.MongoClient
 }
 
-func NewDBService(client *mongo.Client) *MongoDB {
+func NewDBService(client *mongo.Client) repository.VectorRepo {
 	return &MongoDB{
 		MongoClient: client,
 	}
