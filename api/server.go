@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/telexintegrations/support-ai/aicom"
 	"github.com/telexintegrations/support-ai/internal/repository"
+	dbinterface "github.com/telexintegrations/support-ai/internal/repository/dbInterface"
 	mongoClient "github.com/telexintegrations/support-ai/internal/repository/mongo"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -25,9 +26,10 @@ type Server struct {
 	Router    *gin.Engine
 	AIService aicom.AIService
 	DB        repository.VectorRepo
+	CDB       dbinterface.ChromaManager
 }
 
-func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {
+func NewServer(envVar *EnvConfig, db *mongo.Client, cdb dbinterface.ChromaManager) *Server {
 	// Setup needed services...
 	dbService := mongoClient.NewDBService(db)
 	aiservice, _ := aicom.NewAIService(envVar.GenaiAPIKey)
@@ -41,6 +43,7 @@ func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {
 		Router:    nil,
 		AIService: aiservice,
 		DB:        dbService,
+		CDB:       cdb,
 	}
 }
 
