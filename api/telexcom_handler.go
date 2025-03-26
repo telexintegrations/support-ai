@@ -21,6 +21,11 @@ func (s *Server) sendNgrokJson(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, telexcom.NgrokIntegrationJson)
 }
 
+func (s *Server) sendChromaJson(ctx *gin.Context) {
+	ctx.Header("Content-Type", "application/json")
+	ctx.JSON(http.StatusOK, telexcom.ChromaIntegrationJson)
+}
+
 func (s *Server) receiveChatQueries(ctx *gin.Context) {
 	var req telexcom.TelexChatPayload
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -33,7 +38,7 @@ func (s *Server) receiveChatQueries(ctx *gin.Context) {
 	telexComClient := http.Client{
 		Timeout: time.Second * 3,
 	}
-	txc := telexcom.NewTelexCom(s.AIService, s.DB, telexComClient)
+	txc := telexcom.NewTelexCom(s.AIService, s.DB, s.CDB, telexComClient)
 	go func(txc *telexcom.TelexCom) {
 		err := txc.ProcessTelexInputRequest(ctx, req)
 		if err != nil {

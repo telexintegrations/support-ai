@@ -6,11 +6,12 @@ import (
 )
 
 type DatabaseManager struct {
-	Mongo dbinterface.MongoManager
+	Mongo    dbinterface.MongoManager
+	ChromaDB dbinterface.ChromaManager
 }
 
 var DB = DatabaseManager{}
 
 func ConnectDB(client *mongo.Client) *DatabaseManager {
-	return &DatabaseManager{}
+	return &DB
 }

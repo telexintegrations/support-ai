@@ -93,7 +93,7 @@ var NgrokIntegrationJson = Integration{
 		Descriptions: Descriptions{
 			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
 			AppLogo:         "https://raw.githubusercontent.com/samuelIkoli/Chatbot-AI-Agent/refs/heads/dev/public/home/chatbot.png",
-			AppName:         "Ngrok Support AI",
+			AppName:         "Ngrok Chroma Support AI",
 			AppURL:          "https://chatbot-ai-agent.vercel.app/",
 			BackgroundColor: "#ffff",
 		},
@@ -110,7 +110,38 @@ var NgrokIntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://a592-102-91-71-249.ngrok-free.app/target",
+		TargetURL: "https://e4a4-102-88-55-185.ngrok-free.app/target/chroma",
+		TickURL:   "",
+	},
+}
+
+var ChromaIntegrationJson = Integration{
+	Data: Data{
+		Date: Date{
+			CreatedAt: "2025-03-05",
+			UpdatedAt: "2025-03-05",
+		},
+		Descriptions: Descriptions{
+			AppDescription:  "The support assistant for your organisation. Reply FAQs, check documentation and thrive",
+			AppLogo:         "https://raw.githubusercontent.com/samuelIkoli/Chatbot-AI-Agent/refs/heads/dev/public/home/chatbot.png",
+			AppName:         "Support AI V2",
+			AppURL:          "https://chatbot-ai-agent.vercel.app/",
+			BackgroundColor: "#ffff",
+		},
+		IntegrationCategory: "AI & Machine Learning",
+		IntegrationType:     "interval",
+		IsActive:            true,
+		KeyFeatures:         []string{"Gives apt responses to FAQs.", "Sends users response based on data stored in database."},
+		Author:              "GoLang team hng12",
+		Settings: []IntegrationSetting{
+			{
+				Label:    "support-channel-id",
+				Type:     "text",
+				Required: true,
+				Default:  "",
+			},
+		},
+		TargetURL: "https://support-ai-hsd0.onrender.com/target/chroma",
 		TickURL:   "",
 	},
 }
@@ -128,7 +159,9 @@ type MonitorPayload struct {
 // }
 
 type TelexChatPayload struct {
+	OrgId     string               `json:"org_id,omitempty"`
 	ChannelID string               `json:"channel_id,omitempty"`
+	ThreadID  string               `json:"thread_id,omitempty"`
 	Message   string               `json:"message,omitempty"`
 	Settings  []IntegrationSetting `json:"settings,omitempty"`
 }

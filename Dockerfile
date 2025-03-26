@@ -1,11 +1,19 @@
-# Use MongoDB 7.0 official image
-FROM mongo:7.0
+FROM python:3.9-slim
 
-# Set up working directory inside the container
-WORKDIR /data/db
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Expose MongoDB's default port
-EXPOSE 27017
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y \
+    && rm -rf /var/lib/apt/lists/*
 
-# Start MongoDB when the container runs
-CMD ["mongod", "--bind_ip_all", "--setParameter", "featureFlagSearchIndexes=true"]
+# Create app directory
+WORKDIR /app
+
+# Install ChromaDB
+RUN pip install --no-cache-dir chromadb==0.5.5 onnxruntime protobuf
+
+# Expose ChromaDB API port
+EXPOSE 8000
+
+# Start ChromaDB server
+CMD ["chroma", "run", "--host", "0.0.0.0", "--port", "8000"]
