@@ -1,26 +1,17 @@
 version: "3.8"
 
 services:
-  mongodb:
-    image: mongo:latest
-    container_name: mongo-db
-    restart: always
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-
   chromadb:
-    image: python:3.10-slim
+    image: chromadb/chroma:0.5.5
     container_name: chroma-db
     restart: always
     ports:
       - "8000:8000"
     volumes:
-      - chroma_data:/app/chroma_db
-    command: >
-      sh -c "pip install chromadb==0.5.5 && chromadb run --host 0.0.0.0 --port 8000"
+      - chroma_data:/chroma/chroma_db
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      # - CHROMA_DB_IMPL=duckdb
 
 volumes:
-  mongo_data:
   chroma_data:
