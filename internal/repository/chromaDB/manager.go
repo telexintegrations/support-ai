@@ -12,6 +12,6 @@ func NewChromeDB(client *chromago.Client) *ChromaDB {
 	return &ChromaDB{Chroma: client}
 }
 
-func (c ChromaDB) ChromaDB() *chromago.Client {
+func (c *ChromaDB) ChromaDB() *chromago.Client {
 	return c.ChromaDB()
 }
