@@ -63,12 +63,14 @@ func LoadEnvConfig() (EnvConfig, error) {
 		db_username := os.Getenv("MONGO_USERNAME")
 		db_password := os.Getenv("MONGO_PASSWORD")
 		db_name := os.Getenv("MONGODATABASE_NAME")
+		chromadb_dev_uri := os.Getenv("CHROMADB_DEV_URI")
 		envConfig = EnvConfig{
 			GenaiAPIKey:        apikey,
 			MONGODB_DEV_URI:    uri,
 			MONGO_USERNAME:     db_username,
 			MONGO_PASSWORD:     db_password,
 			MONGODATABASE_NAME: db_name,
+			CHROMADB_DEV_URI:   chromadb_dev_uri,
 		}
 	}
 
