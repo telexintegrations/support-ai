@@ -110,7 +110,7 @@ var NgrokIntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://a592-102-91-71-249.ngrok-free.app/target",
+		TargetURL: "https://eb43-102-216-183-15.ngrok-free.app/db/query",
 		TickURL:   "",
 	},
 }
@@ -120,7 +120,6 @@ type MonitorPayload struct {
 	ReturnURL string        `json:"return_url,omitempty"`
 	Settings  []interface{} `json:"settings,omitempty"`
 }
-
 
 type TelexChatPayload struct {
 	ChannelID string               `json:"channel_id,omitempty"`
@@ -133,4 +132,8 @@ type TelexResponsePayload struct {
 	Username  string `json:"username"` // the name of your integration
 	EventName string `json:"event_name"`
 	Status    string `json:"status"`
+}
+
+type UploadTextRequestData struct {
+	FileText string `json:"file_text" binding:"required"`
 }

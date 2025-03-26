@@ -67,7 +67,7 @@ func (txc *TelexCom) processUploadCmd(ctx context.Context, content, chanID strin
 		txc.SendMessageToTelex(ctx, lastMessageToTelex, chanID)
 		return ErrFailedToUploadContextToAI
 	}
-	slog.Info("successfull, inserting chunk embeddings into db")
+	slog.Info("successful, inserting chunk embeddings into db")
 	lastMessageToTelex = successUploadMsg
 	txc.SendMessageToTelex(ctx, lastMessageToTelex, chanID)
 	return nil

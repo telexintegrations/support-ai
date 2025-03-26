@@ -47,19 +47,16 @@ func (s *Server) UploadFilesToDb(ctx *gin.Context) {
 		extractedTexts += text
 	}
 
-	cleanedText := format.CleanText(extractedTexts)
-
 	telexComClient := http.Client{
 		Timeout: time.Second * 3,
 	}
-	var req telexcom.TelexChatPayload
 	txc := telexcom.NewTelexCom(s.AIService, s.DB, telexComClient)
-	uploadErr := txc.ProcessTelexUpload(ctx, extractedTexts, req)
+	uploadErr := txc.ProcessTelexUpload(ctx, extractedTexts, "0195d2fb-997a-7665-a413-ea5a653bb240")
 	if uploadErr != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "error", "error": fmt.Sprintf("Failed to chunk and persist text in database. %v", uploadErr)})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "error", "error": fmt.Sprintf("Process failed. %v", uploadErr)})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"status": "success",
-		"message": "File uploaded succesfully!", "files": cleanedText})
+		"message": "File uploaded succesfully!"})
 }

@@ -1,6 +1,7 @@
 package api
 
-import(
+import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -11,6 +12,7 @@ import(
 
 func (s *Server) MakeQuerySearch(ctx *gin.Context) {
 	var req telexcom.TelexChatPayload
+
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		slog.Error("Invalid payload", "error", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -27,6 +29,8 @@ func (s *Server) MakeQuerySearch(ctx *gin.Context) {
 		if err != nil {
 			slog.Error("failed to handle telex request", "details", err)
 		}
+
+		fmt.Printf("\n Request payload: %v \n", req)
 	}(txc)
 	ctx.Status(202)
 

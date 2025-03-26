@@ -15,19 +15,20 @@ func FormatResponse(data interface{}) ([]byte, error) {
 }
 
 func CleanText(text string) string {
+	// Remove XML tags
+	text = regexp.MustCompile(`<[^>]+>`).ReplaceAllString(text, " ")
+
 	// Remove non-printable characters
-	re := regexp.MustCompile(`[\x00-\x1F\x7F]+`)
-	text = re.ReplaceAllString(text, " ")
+	text = regexp.MustCompile(`[\x00-\x1F\x7F]+`).ReplaceAllString(text, " ")
 
-	// Fix concatenated words (handles letters and numbers)
-	reSpaces := regexp.MustCompile(`([a-zA-Z])([0-9])|([0-9])([a-zA-Z])|([a-z])([A-Z])`)
-	text = reSpaces.ReplaceAllString(text, `$1$3$5 $2$4$6`)
+	// Fix concatenated words (letters, numbers, and uppercase transitions)
+	text = regexp.MustCompile(`([a-zA-Z])([0-9])|([0-9])([a-zA-Z])|([a-z])([A-Z])`).ReplaceAllString(text, `$1$3$5 $2$4$6`)
 
-	// Replace multiple spaces with a single space
+	// Normalize spaces (convert multiple spaces to a single space)
 	text = regexp.MustCompile(`\s+`).ReplaceAllString(text, " ")
 
-	// Restore paragraph spacing (ensure double line breaks are preserved)
-	text = regexp.MustCompile(`\n\n+`).ReplaceAllString(text, "\n\n")
+	// Ensure paragraph spacing (preserve double line breaks)
+	text = regexp.MustCompile(`\n{3,}`).ReplaceAllString(text, "\n\n")
 
 	// Trim leading/trailing spaces
 	text = strings.TrimSpace(text)

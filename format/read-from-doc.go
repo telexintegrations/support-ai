@@ -21,7 +21,9 @@ func ExtractTextFromDocx(fileBytes []byte) (string, error) {
 	defer doc.Close()
 
 	text := doc.Editable().GetContent()
-	return text, nil
+	cleanedText := CleanText(text)
+
+	return cleanedText, nil
 }
 
 func ExtractTextFromPDF(pdfBytes []byte) (string, error) {
@@ -51,7 +53,9 @@ func ExtractTextFromPDF(pdfBytes []byte) (string, error) {
 			extractedText.WriteString(text.S + "\n\n")
 		}
 	}
-	return extractedText.String(), nil
+
+	cleanedText := CleanText(extractedText.String())
+	return cleanedText, nil
 }
 
 func ExtractText(fileHeader *multipart.FileHeader) (string, error) {

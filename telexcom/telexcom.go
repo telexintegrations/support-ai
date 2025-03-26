@@ -114,8 +114,8 @@ func (txc *TelexCom) ProcessTelexInputRequest(ctx context.Context, req TelexChat
 	return nil
 }
 
-func (txc *TelexCom) ProcessTelexUpload(ctx context.Context, extractedText string, req TelexChatPayload) error {
-	err := txc.processUploadCmd(ctx, extractedText, req.ChannelID)
+func (txc *TelexCom) ProcessTelexUpload(ctx context.Context, extractedText string, channelID string) error {
+	err := txc.processUploadCmd(ctx, extractedText, channelID)
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func (txc *TelexCom) ProcessTelexQuery(ctx context.Context, req TelexChatPayload
 	}
 	htmlStrippedQuery, _ := processQuery(userQuery)
 
-	err := txc.processUploadCmd(ctx, htmlStrippedQuery, req.ChannelID)
+	err := txc.processHelpCmd(ctx, htmlStrippedQuery, req.ChannelID)
 	if err != nil {
 		return err
 	}
