@@ -33,7 +33,7 @@ func (s *Server) receiveChatQueries(ctx *gin.Context) {
 	telexComClient := http.Client{
 		Timeout: time.Second * 3,
 	}
-	txc := telexcom.NewTelexCom(s.AIService, s.DB, telexComClient)
+	txc := telexcom.NewTelexCom(s.AIService, s.DB, s.CDB, telexComClient)
 	go func(txc *telexcom.TelexCom) {
 		err := txc.ProcessTelexInputRequest(ctx, req)
 		if err != nil {

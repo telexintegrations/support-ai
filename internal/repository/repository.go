@@ -3,8 +3,13 @@ package repository
 import (
 	"context"
 
+	dbinterface "github.com/telexintegrations/support-ai/internal/repository/dbInterface"
 	"github.com/telexintegrations/support-ai/internal/repository/dbmodel"
 )
+
+type DataBaseManager struct {
+	ChromoDB dbinterface.ChromaManager
+}
 
 type VectorRepo interface {
 	GetContentEmbeddings(ctx context.Context) ([]dbmodel.ContentEmbeddings, error)
