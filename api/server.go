@@ -89,6 +89,8 @@ func (s *Server) SetupRouter() error {
 	r.GET("/ngrok.json", s.sendNgrokJson)
 	r.POST("/target", s.receiveChatQueries)
 	r.GET("/basic-response", s.BasicResponse)
+	r.POST("/dummy-routes", s.DummyRoute)
+	r.POST("/dummy-search", s.SearchDummyRoutes)
 	// r.GET("/integration",
 	return nil
 }
