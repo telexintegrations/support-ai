@@ -122,6 +122,7 @@ type MonitorPayload struct {
 }
 
 type TelexChatPayload struct {
+	OrgId     string               `json:"org_id,omitempty"`
 	ChannelID string               `json:"channel_id,omitempty"`
 	Message   string               `json:"message,omitempty"`
 	Settings  []IntegrationSetting `json:"settings,omitempty"`

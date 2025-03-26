@@ -26,7 +26,7 @@ docker-down:
 # Build and run MongoDB manually (without Compose)
 .PHONY: docker-container
 docker-container:
-	docker build -t my-mongodb .
+	docker build -t my-db .
 	docker run -d -p 27017:27017 --name mongodb my-mongodb
 
 

@@ -1,17 +1,26 @@
-# this should only be used in development mode
 version: "3.8"
+
 services:
   mongodb:
-    image: mongo:7.0
-    container_name: mongodb_container
+    image: mongo:latest
+    container_name: mongo-db
     restart: always
-    # command: ["mongod", "--setParameter", "vectorSearchEnabled=true"]
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
+      - mongo_data:/data/db
+
+  chromadb:
+    image: python:3.10-slim
+    container_name: chroma-db
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/app/chroma_db
+    command: >
+      sh -c "pip install chromadb==0.5.5 && chromadb run --host 0.0.0.0 --port 8000"
+
 volumes:
-  mongodb_data:
+  mongo_data:
+  chroma_data:

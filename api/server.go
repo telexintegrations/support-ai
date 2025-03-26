@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	chromago "github.com/amikos-tech/chroma-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/telexintegrations/support-ai/aicom"
 	"github.com/telexintegrations/support-ai/internal/repository"
+	chromadb "github.com/telexintegrations/support-ai/internal/repository/chromaDB"
 	mongoClient "github.com/telexintegrations/support-ai/internal/repository/mongo"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -25,11 +27,13 @@ type Server struct {
 	Router    *gin.Engine
 	AIService aicom.AIService
 	DB        repository.VectorRepo
+	CDB       *chromadb.ChromaDB
 }
 
-func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {
+func NewServer(envVar *EnvConfig, db *mongo.Client, cdb *chromago.Client) *Server {
 	// Setup needed services...
 	dbService := mongoClient.NewDBService(db)
+	cdbClient := chromadb.NewChromeDB(cdb)
 	aiservice, _ := aicom.NewAIService(envVar.GenaiAPIKey)
 	if aiservice == nil || dbService == nil {
 		fmt.Println("Unable to instantiate AI client")
@@ -41,6 +45,7 @@ func NewServer(envVar *EnvConfig, db *mongo.Client) *Server {
 		Router:    nil,
 		AIService: aiservice,
 		DB:        dbService,
+		CDB:       cdbClient,
 	}
 }
 
@@ -87,6 +92,9 @@ func (s *Server) SetupRouter() error {
 	r.GET("/ngrok.json", s.sendNgrokJson)
 	r.POST("/target", s.receiveChatQueries)
 	r.GET("/basic-response", s.BasicResponse)
+	r.POST("/dummy-routes", s.DummyRoute)
+	r.POST("/dummy-search", s.SearchDummyRoutes)
+	// r.GET("/integration",
 	return nil
 }
 
