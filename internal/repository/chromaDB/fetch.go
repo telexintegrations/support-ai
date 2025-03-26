@@ -3,6 +3,7 @@ package chromadb
 import (
 	"context"
 	"fmt"
+	"strings"
 )
 
 type SearchResult struct {
@@ -12,14 +13,19 @@ type SearchResult struct {
 }
 
 func (c *ChromaDB) SearchVectorFromContentEmbedding(ctx context.Context, query string, topK int32, orgId string) ([]SearchResult, error) {
-	ef, err := functionEmbeddings()
-	if err != nil {
-		return nil, err
+
+	if orgId == "" {
+		return nil, ErrNoOrgId
 	}
-	col, err := c.ChromaDB().GetCollection(ctx, ContentEmbeddingsCollection, ef)
+
+	collectionAsOrgId := fmt.Sprintf("%s-%s", collectionPrefix, orgId)
+	col, err := c.ChromaDB().GetCollection(ctx, collectionAsOrgId, nil)
 
 	if err != nil {
 		fmt.Println(err)
+		if strings.Contains(err.Error(), fmt.Sprintf("%s does not exist", collectionAsOrgId)) {
+			return nil, ErrNoOrgId
+		}
 		return nil, err
 	}
 	queryTexts := []string{query}

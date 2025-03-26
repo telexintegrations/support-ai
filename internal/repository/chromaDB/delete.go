@@ -10,12 +10,7 @@ func (c *ChromaDB) DeleteEntireOrganisationContext(ctx context.Context, orgID st
 		return ErrNoOrgId
 	}
 
-	ef, err := functionEmbeddings()
-	if err != nil {
-		return err
-	}
-
-	col, err := c.ChromaDB().GetCollection(ctx, ContentEmbeddingsCollection, ef)
+	col, err := c.ChromaDB().GetCollection(ctx, ContentEmbeddingsCollection, nil)
 	if err != nil {
 		fmt.Println("Error getting ChromaDB collection:", err)
 		return err

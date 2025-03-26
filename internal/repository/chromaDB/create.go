@@ -32,36 +32,35 @@ func generateEmbeddings(content []string) ([]*types.Embedding, error) {
 }
 
 func functionEmbeddings() (types.EmbeddingFunction, error) {
-	ef, err := g.NewGeminiEmbeddingFunction(g.WithEnvAPIKey(), g.WithDefaultModel("text-embedding-004"))
+	embedFunc, err := g.NewGeminiEmbeddingFunction(g.WithEnvAPIKey(), g.WithDefaultModel("text-embedding-004"))
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err, "---------->")
 		return nil, err
 	}
-	return ef, nil
+	return embedFunc, nil
 }
+
+var collectionPrefix string = "org"
+
+// collection should be orgId
 func (c *ChromaDB) InsertIntoChromaEmbeddingCollection(ctx context.Context, chromaColl ChromaContentEmbeddings) error {
+
+	if chromaColl.OrgId == "" {
+		return ErrNoOrgId
+	}
 	metadata := map[string]interface{}{
 		"OrgId": chromaColl.OrgId,
 	}
 
-	ef, err := functionEmbeddings()
+	collectionAsOrgId := fmt.Sprintf("%s-%s", collectionPrefix, chromaColl.OrgId)
+	col, err := c.ChromaDB().CreateCollection(ctx, collectionAsOrgId, metadata, true, nil, types.L2)
 
 	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	col, err := c.ChromaDB().CreateCollection(ctx, ContentEmbeddingsCollection, metadata, true, ef, types.L2)
-
-	if err != nil {
+		fmt.Println("add data err, -------->", err)
 		fmt.Println(err)
 		return err
 	}
 
-	textEmbeddings, err := generateEmbeddings(chromaColl.ContentChunks)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
 	chromaColl.documentID = uuid.New().String()
 	ids := make([]string, len(chromaColl.ContentChunks))
 	metadatas := make([]map[string]interface{}, len(chromaColl.ContentChunks))
@@ -75,6 +74,13 @@ func (c *ChromaDB) InsertIntoChromaEmbeddingCollection(ctx context.Context, chro
 			"Text":       chunk,
 		}
 	}
-	col.Add(ctx, textEmbeddings, metadatas, chromaColl.ContentChunks, ids)
+	_, err = col.Add(ctx, nil, metadatas, chromaColl.ContentChunks, ids)
+
+	if err != nil {
+		fmt.Println("add dataa", err)
+		return err
+	}
+
+	fmt.Println(col.Count(ctx))
 	return nil
 }
