@@ -13,6 +13,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/telexintegrations/support-ai/aicom"
 	"github.com/telexintegrations/support-ai/internal/repository"
+	chromadb "github.com/telexintegrations/support-ai/internal/repository/chromaDB"
 )
 
 var (
@@ -34,16 +35,18 @@ const (
 type TelexCom struct {
 	aisvc      aicom.AIService
 	db         repository.VectorRepo
+	cdb        *chromadb.ChromaDB
 	httpClient http.Client
 }
 
 var lastMessageToTelex string
 
-func NewTelexCom(aiservice aicom.AIService, dbinterface repository.VectorRepo, client http.Client) *TelexCom {
+func NewTelexCom(aiservice aicom.AIService, dbinterface repository.VectorRepo, cdb *chromadb.ChromaDB, client http.Client) *TelexCom {
 	return &TelexCom{
 		aisvc:      aiservice,
 		db:         dbinterface,
 		httpClient: client,
+		cdb:        cdb,
 	}
 }
 

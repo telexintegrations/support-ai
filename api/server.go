@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	chromago "github.com/amikos-tech/chroma-go"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/telexintegrations/support-ai/aicom"
 	"github.com/telexintegrations/support-ai/internal/repository"
-	dbinterface "github.com/telexintegrations/support-ai/internal/repository/dbInterface"
+	chromadb "github.com/telexintegrations/support-ai/internal/repository/chromaDB"
 	mongoClient "github.com/telexintegrations/support-ai/internal/repository/mongo"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -26,12 +27,13 @@ type Server struct {
 	Router    *gin.Engine
 	AIService aicom.AIService
 	DB        repository.VectorRepo
-	CDB       dbinterface.ChromaManager
+	CDB       *chromadb.ChromaDB
 }
 
-func NewServer(envVar *EnvConfig, db *mongo.Client, cdb dbinterface.ChromaManager) *Server {
+func NewServer(envVar *EnvConfig, db *mongo.Client, cdb *chromago.Client) *Server {
 	// Setup needed services...
 	dbService := mongoClient.NewDBService(db)
+	cdbClient := chromadb.NewChromeDB(cdb)
 	aiservice, _ := aicom.NewAIService(envVar.GenaiAPIKey)
 	if aiservice == nil || dbService == nil {
 		fmt.Println("Unable to instantiate AI client")
@@ -43,7 +45,7 @@ func NewServer(envVar *EnvConfig, db *mongo.Client, cdb dbinterface.ChromaManage
 		Router:    nil,
 		AIService: aiservice,
 		DB:        dbService,
-		CDB:       cdb,
+		CDB:       cdbClient,
 	}
 }
 

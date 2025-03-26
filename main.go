@@ -7,7 +7,6 @@ import (
 
 	"github.com/robfig/cron"
 	"github.com/telexintegrations/support-ai/api"
-	"github.com/telexintegrations/support-ai/internal/repository"
 	chromadb "github.com/telexintegrations/support-ai/internal/repository/chromaDB"
 	"github.com/telexintegrations/support-ai/internal/repository/mongo"
 )
@@ -49,7 +48,6 @@ func main() {
 		cdb.Close()
 	}()
 
-	chromaDB := repository.DB.ChromaDB
-	server := api.NewServer(&config, dbClient, chromaDB)
+	server := api.NewServer(&config, dbClient, cdb)
 	server.StartServer(":8080")
 }
