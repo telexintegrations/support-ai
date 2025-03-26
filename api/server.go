@@ -87,6 +87,7 @@ func (s *Server) SetupRouter() error {
 	r.POST("/upload", s.UploadFiles)
 	r.GET("/integration.json", s.sendIntegrationJson)
 	r.GET("/ngrok.json", s.sendNgrokJson)
+	r.GET("/v2/integration.json", s.sendChromaJson)
 	r.POST("/target", s.receiveChatQueries)
 	r.POST("/target/chroma", s.ReceiveChatQueries2)
 	r.GET("/basic-response", s.BasicResponse)
