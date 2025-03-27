@@ -25,7 +25,7 @@ const (
 	telexWebhookBase         = "https://ping.telex.im/v1/webhooks"
 	failedToProcessQueryMsg  = "sorry couldn't process your query, try again"
 	failedToProcessUploadMsg = "sorry, failed to process your upload, try again"
-	successUploadMsg         = "Content Uploaded, you can use /help to send queries"
+	successUploadMsg         = "Content Uploaded"
 	caseUpload               = "/upload"
 	caseHelp                 = "/help"
 	caseChangeContext        = "/change-context"

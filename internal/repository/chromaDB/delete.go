@@ -3,6 +3,7 @@ package chromadb
 import (
 	"context"
 	"fmt"
+	"strings"
 )
 
 func (c *ChromaDB) DeleteEntireOrganisationContext(ctx context.Context, orgID string) error {
@@ -10,9 +11,14 @@ func (c *ChromaDB) DeleteEntireOrganisationContext(ctx context.Context, orgID st
 		return ErrNoOrgId
 	}
 
-	col, err := c.ChromaDB().GetCollection(ctx, ContentEmbeddingsCollection, nil)
+	collectionAsOrgId := fmt.Sprintf("%s-%s", collectionPrefix, orgID)
+
+	col, err := c.ChromaDB().GetCollection(ctx, collectionAsOrgId, nil)
 	if err != nil {
-		fmt.Println("Error getting ChromaDB collection:", err)
+		fmt.Println(err)
+		if strings.Contains(err.Error(), fmt.Sprintf("%s does not exist", collectionAsOrgId)) {
+			return ErrNoDataInOrg
+		}
 		return err
 	}
 

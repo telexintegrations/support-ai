@@ -5,24 +5,26 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/amikos-tech/chroma-go/types"
 )
 
 var ErrNoOrgId = errors.New("no organisation ID provided")
+var ErrNoDataInOrg = errors.New("Organisation has no data provided")
 
 func (c *ChromaDB) ReplaceEmbeddingContext(ctx context.Context, newContent []string, newEmbeddings []*types.Embedding, orgId string) error {
 	if orgId == "" {
 		return ErrNoOrgId
 	}
 
-	ef, err := functionEmbeddings()
+	collectionAsOrgId := fmt.Sprintf("%s-%s", collectionPrefix, orgId)
+	col, err := c.ChromaDB().GetCollection(ctx, collectionAsOrgId, nil)
 	if err != nil {
-		return nil
-	}
-	col, err := c.ChromaDB().GetCollection(ctx, ContentEmbeddingsCollection, ef)
-	if err != nil {
-		log.Println("Failed to get ChromaDB collection:", err)
+		fmt.Println(err)
+		if strings.Contains(err.Error(), fmt.Sprintf("%s does not exist", collectionAsOrgId)) {
+			return ErrNoDataInOrg
+		}
 		return err
 	}
 

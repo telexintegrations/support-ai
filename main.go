@@ -44,9 +44,9 @@ func main() {
 		return
 	}
 
-	defer func() {
-		cdb.Close()
-	}()
+	// defer func() {
+	// 	cdb.Close()
+	// }()
 
 	server := api.NewServer(&config, dbClient, cdb)
 	server.StartServer(":8080")

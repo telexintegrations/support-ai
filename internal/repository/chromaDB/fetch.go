@@ -24,7 +24,7 @@ func (c *ChromaDB) SearchVectorFromContentEmbedding(ctx context.Context, query s
 	if err != nil {
 		fmt.Println(err)
 		if strings.Contains(err.Error(), fmt.Sprintf("%s does not exist", collectionAsOrgId)) {
-			return nil, ErrNoOrgId
+			return nil, ErrNoDataInOrg
 		}
 		return nil, err
 	}

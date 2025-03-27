@@ -20,7 +20,6 @@ type AIServiceImpl struct {
 
 // NewAIService initializes and returns an AIServiceImpl instance
 func NewAIService(apiKey string) (AIService, error) {
-	fmt.Printf("API KEY is %s", apiKey)
 	if apiKey == "" {
 		return nil, fmt.Errorf("GEMINI_API_KEY is missing")
 	}
@@ -87,7 +86,8 @@ func (a *AIServiceImpl) FineTunedResponse(message, db_response string) (string, 
 	Always be polite, professional, and empathetic in your responses.
 	If a user seems frustrated or confused, acknowledge their concern before providing an answer.
 	Your goal is to efficiently assist users with their inquiries while maintaining clarity and professionalism. If unsure, redirect users to human support instead of providing incorrect information.`
-	startPrompt := fmt.Sprintf("%s, this is the knowledge base {%s} respond to this query: %s, and make your response as humanoid as possible.", newPrompt, db_response, message)
+	startPrompt := fmt.Sprintf("%s, this is the knowledge base {%s} respond to this query: %s.", newPrompt, db_response, message)
+	fmt.Printf("AI PROMPT IS %s", startPrompt)
 	ai_response, err := a.GetAIResponse(startPrompt)
 	if err != nil {
 		fmt.Println("Failed to process file: ", err)

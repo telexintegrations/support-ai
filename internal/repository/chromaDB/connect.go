@@ -8,7 +8,7 @@ import (
 )
 
 func ConnectionToChroma(uri string) (*chromago.Client, error) {
-	client, err := chromago.NewClient(chromago.WithBasePath(uri))
+	client, err := chromago.NewClient(uri)
 
 	if err != nil {
 		fmt.Println("failed to connect to DB", err)
