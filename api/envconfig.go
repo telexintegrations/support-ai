@@ -16,6 +16,7 @@ type EnvConfig struct {
 	MONGO_PASSWORD     string `mapstructure:"MONGO_PASSWORD"`
 	MONGODATABASE_NAME string `mapstructure:"MONGODATABASE_NAME"`
 	CHROMADB_DEV_URI   string `mapstructure:"CHROMADB_DEV_URI"`
+	CHROMODB_PROD_URI  string `mapsctructure:"CHROMADB_PROD_URI"`
 }
 
 var (
