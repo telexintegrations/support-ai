@@ -27,7 +27,7 @@ func main() {
 		fmt.Println(err)
 		panic(err)
 	}
-	
+
 	dbClient, err := mongo.ConnectToMongo(config.MONGODB_DEV_URI, config.MONGODATABASE_NAME)
 	if err != nil {
 		fmt.Println(err)
@@ -44,9 +44,9 @@ func main() {
 		return
 	}
 
-	// defer func() {
-	// 	cdb.Close()
-	// }()
+	defer func() {
+		cdb.Close()
+	}()
 
 	server := api.NewServer(&config, dbClient, cdb)
 	server.StartServer(":8080")

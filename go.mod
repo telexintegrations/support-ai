@@ -10,7 +10,7 @@ require (
 )
 
 require (
-	github.com/amikos-tech/chroma-go v0.1.4
+	github.com/amikos-tech/chroma-go v0.1.5-0.20241103135957-1b1e6ef18500
 	github.com/google/generative-ai-go v0.19.0
 	github.com/nguyenthenguyen/docx v0.0.0-20230621112118-9c8e795a11db
 	rsc.io/pdf v0.1.1
@@ -26,6 +26,7 @@ require (
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
+	github.com/yalue/onnxruntime_go v1.19.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

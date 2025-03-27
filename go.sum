@@ -16,6 +16,8 @@ github.com/Masterminds/semver v1.5.0 h1:H65muMkzWKEuNDnfl9d70GUjFniHKHRbFPGBuZ3Q
 github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/amikos-tech/chroma-go v0.1.4 h1:MQXFBuKHOuZtlLOF6fLRb1VdXKKWp6TwdWxm6v/RUII=
 github.com/amikos-tech/chroma-go v0.1.4/go.mod h1:sT6uXOo/L5S/Q0v9jpYtoR1iOM68hUE2itWw8sOwLHY=
+github.com/amikos-tech/chroma-go v0.1.5-0.20241103135957-1b1e6ef18500 h1:blChbPuVerKrTKNMNSnI5To0DyakV6UWYteXzczkK4E=
+github.com/amikos-tech/chroma-go v0.1.5-0.20241103135957-1b1e6ef18500/go.mod h1:5pEBH3DVz1fZ1/mnY+UgES0fqkIR1YmkPfvJv0Xwry8=
 github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuPk=
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/bytedance/sonic v1.12.6 h1:/isNmCUF2x3Sh8RAp/4mh4ZGkcFAX/hLrzrK3AvpRzk=
@@ -190,6 +192,8 @@ github.com/xdg-go/scram v1.1.2 h1:FHX5I5B4i4hKRVRBCFRxq1iQRej7WO3hhBuJf+UUySY=
 github.com/xdg-go/scram v1.1.2/go.mod h1:RT/sEzTbU5y00aCK8UOx6R7YryM0iF1N2MOmC3kKLN4=
 github.com/xdg-go/stringprep v1.0.4 h1:XLI/Ng3O1Atzq0oBs3TWm+5ZVgkq2aqdlvP9JtoZ6c8=
 github.com/xdg-go/stringprep v1.0.4/go.mod h1:mPGuuIYwz7CmR2bT9j4GbQqutWS1zV24gijq1dTyGkM=
+github.com/yalue/onnxruntime_go v1.19.0 h1:+qCu7/Nzrr/TY7B3sMy9sOATegP2qbtXn4b7q90fDOo=
+github.com/yalue/onnxruntime_go v1.19.0/go.mod h1:b4X26A8pekNb1ACJ58wAXgNKeUCGEAQ9dmACut9Sm/4=
 github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 h1:ilQV1hzziu+LLM3zUTJ0trRztfwgjqKnBWNtSRkbmwM=
 github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78/go.mod h1:aL8wCCfTfSfmXjznFBSZNN13rSJjlIOI1fUNAtF7rmI=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
