@@ -23,7 +23,7 @@ var (
 
 const (
 	telexWebhookBase         = "https://ping.telex.im/v1/webhooks"
-	failedToProcessQueryMsg  = "sorry couldn't process your query, try again"
+	failedToProcessQueryMsg  = "sorry, couldn't process your query, try again"
 	failedToProcessUploadMsg = "sorry, failed to process your upload, try again"
 	successUploadMsg         = "Content Uploaded"
 	caseUpload               = "/upload"

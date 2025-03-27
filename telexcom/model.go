@@ -110,7 +110,7 @@ var NgrokIntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://e4a4-102-88-55-185.ngrok-free.app/target/chroma",
+		TargetURL: " https://6b15-102-216-183-124.ngrok-free.app/db/query",
 		TickURL:   "",
 	},
 }

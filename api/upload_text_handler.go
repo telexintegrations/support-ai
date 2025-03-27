@@ -22,7 +22,7 @@ func (s *Server) UploadTextToDb(ctx *gin.Context) {
 		Timeout: time.Second * 3,
 	}
 	txc := telexcom.NewTelexCom(s.AIService, s.DB, s.CDB, telexComClient)
-	uploadErr := txc.ProcessTelexUpload(ctx, requestData.FileText, "0195d2fb-997a-7665-a413-ea5a653bb240")
+	uploadErr := txc.ProcessTelexUpload(ctx, requestData.FileText, GlobalReq.ChannelID)
 	if uploadErr != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "error", "error": fmt.Sprintf("Process failed. %v", uploadErr)})
 		return
