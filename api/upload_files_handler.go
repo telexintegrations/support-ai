@@ -5,11 +5,12 @@ import (
 	"net/http"
 
 	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/telexintegrations/support-ai/format"
 	"github.com/telexintegrations/support-ai/telexcom"
 )
+
+var GlobalReq telexcom.TelexChatPayload
 
 func (s *Server) UploadFilesToDb(ctx *gin.Context) {
 	form, err := ctx.MultipartForm()

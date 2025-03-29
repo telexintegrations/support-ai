@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/telexintegrations/support-ai/aicom"
+	"github.com/telexintegrations/support-ai/format"
 	"github.com/telexintegrations/support-ai/internal/repository"
 	chromadb "github.com/telexintegrations/support-ai/internal/repository/chromaDB"
 )
@@ -141,5 +143,39 @@ func (txc *TelexCom) ProcessTelexQuery(ctx context.Context, req TelexChatPayload
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (txc *TelexCom) ProcessTelexDownloadAndExtraction(ctx context.Context, req TelexChatPayload) error {
+	var extractedTexts strings.Builder
+
+	for _, media := range req.Media {
+		if media.FileType == "pdf" || media.FileType == "docx" {
+			path, err := format.DownloadFile(media.FileLink, media.FileName+"."+media.FileType)
+			if err != nil {
+				return err
+			}
+			file, fileErr := format.CreateMultipartFileHeader(path)
+			if fileErr != nil {
+				return fileErr
+			}
+			text, textErr := format.ExtractText(file)
+			if textErr != nil {
+				return textErr
+			}
+			if text == "" {
+				return fmt.Errorf("failed to extract text. file may be broken.")
+			}
+
+			extractedTexts.WriteString(text)
+			extractedTexts.WriteString("\n\n")
+		}
+	}
+	htmlStrippedQuery := extractedTexts.String()
+	err := txc.processUploadCmd(ctx, htmlStrippedQuery, req.ChannelID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -110,7 +110,7 @@ var NgrokIntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: " https://6b15-102-216-183-124.ngrok-free.app/db/query",
+		TargetURL: "https://6ec0-102-216-183-123.ngrok-free.app/db/query",
 		TickURL:   "",
 	},
 }
@@ -158,6 +158,16 @@ type TelexChatPayload struct {
 	ThreadID  string               `json:"thread_id,omitempty"`
 	Message   string               `json:"message,omitempty"`
 	Settings  []IntegrationSetting `json:"settings,omitempty"`
+	AuthSettings []interface{} `json:"auth_settings"`  // Later I'd replace interface{} with a struct
+	Media        []Media       `json:"media"`
+}
+
+type Media struct {
+	ID        string `json:"id"`
+	FileName  string `json:"file_name"`
+	FileType  string `json:"file_type"`
+	MimeType  string `json:"mime_type"`
+	FileLink  string `json:"file_link"`
 }
 
 type TelexResponsePayload struct {

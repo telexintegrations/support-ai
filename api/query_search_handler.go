@@ -11,10 +11,9 @@ import (
 	"github.com/telexintegrations/support-ai/telexcom"
 )
 
-var GlobalReq telexcom.TelexChatPayload
-
 func (s *Server) MakeQuerySearch(ctx *gin.Context) {
-	if err := ctx.ShouldBindJSON(&GlobalReq); err != nil {
+	var req telexcom.TelexChatPayload
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		slog.Error("Invalid payload", "error", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid request payload",
@@ -26,13 +25,24 @@ func (s *Server) MakeQuerySearch(ctx *gin.Context) {
 		Timeout: time.Second * 3,
 	}
 	txc := telexcom.NewTelexCom(s.AIService, s.DB, s.CDB, telexComClient)
-	fmt.Printf("Channel Id: %v \n", GlobalReq.ChannelID)
-	fmt.Printf("Org Id: %v \n", GlobalReq.OrgId)
-	fmt.Printf("Thread Id: %v \n", GlobalReq.ThreadID)
-	fmt.Printf("Message: %v \n", format.StripHTMLTags(GlobalReq.Message))
+
+	fmt.Printf("\n Request details: %v \n", req)
+	fmt.Printf("Channel Id: %v \n", req.ChannelID)
+	fmt.Printf("Org Id: %v \n", req.OrgId)
+	fmt.Printf("Thread Id: %v \n", req.ThreadID)
+	fmt.Printf("Message: %v \n", format.StripHTMLTags(req.Message))
 
 	go func(txc *telexcom.TelexCom) {
-		err := txc.ProcessTelexQuery(ctx, GlobalReq)
+		if len(req.Media) > 0 {
+			go func() {
+				err := txc.ProcessTelexDownloadAndExtraction(ctx, req)
+				if err != nil {
+					slog.Error("failed to handle telex request", "details", err)
+				}
+			}()
+		}
+
+		err := txc.ProcessTelexQuery(ctx, req)
 		if err != nil {
 			slog.Error("failed to handle telex request", "details", err)
 		}
