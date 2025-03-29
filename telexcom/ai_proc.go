@@ -9,6 +9,8 @@ import (
 	"github.com/telexintegrations/support-ai/internal/repository/dbmodel"
 )
 
+var FirstMessageToTelex = "Hello! I'm your virtual support assistant. I'm here to help with any questions or issues you may have. How can I assist you today?"
+
 var (
 	ErrFailedToEmbedQuery         = errors.New("failed to get query vector embeddings")
 	ErrSemanticVectorSearchFailed = errors.New("failed to search of relevant content embeddings")
@@ -67,7 +69,7 @@ func (txc *TelexCom) processUploadCmd(ctx context.Context, content, chanID strin
 		txc.SendMessageToTelex(ctx, lastMessageToTelex, chanID)
 		return ErrFailedToUploadContextToAI
 	}
-	slog.Info("successfull, inserting chunk embeddings into db")
+	slog.Info("successful, inserting chunk embeddings into db")
 	lastMessageToTelex = successUploadMsg
 	txc.SendMessageToTelex(ctx, lastMessageToTelex, chanID)
 	return nil
@@ -121,4 +123,12 @@ func (txc *TelexCom) getChunkEmbeddings(ctx context.Context, chunks []string, ch
 		chunkEmbeddings = append(chunkEmbeddings, chunkEmbedding)
 	}
 	return chunkEmbeddings, nil
+}
+
+func (txc *TelexCom) SendFirstMessageToChannel(ctx context.Context, chanID string) error {
+	err := txc.SendMessageToTelex(ctx, FirstMessageToTelex, chanID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

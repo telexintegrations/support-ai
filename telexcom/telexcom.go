@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/telexintegrations/support-ai/aicom"
+	"github.com/telexintegrations/support-ai/format"
 	"github.com/telexintegrations/support-ai/internal/repository"
 	chromadb "github.com/telexintegrations/support-ai/internal/repository/chromaDB"
 )
@@ -23,7 +25,7 @@ var (
 
 const (
 	telexWebhookBase         = "https://ping.telex.im/v1/webhooks"
-	failedToProcessQueryMsg  = "sorry couldn't process your query, try again"
+	failedToProcessQueryMsg  = "sorry, couldn't process your query, try again"
 	failedToProcessUploadMsg = "sorry, failed to process your upload, try again"
 	successUploadMsg         = "Content Uploaded"
 	caseUpload               = "/upload"
@@ -114,5 +116,66 @@ func (txc *TelexCom) ProcessTelexInputRequest(ctx context.Context, req TelexChat
 			return err
 		}
 	}
+	return nil
+}
+
+func (txc *TelexCom) ProcessTelexUpload(ctx context.Context, extractedText string, channelID string) error {
+	err := txc.processUploadCmd(ctx, extractedText, channelID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (txc *TelexCom) ProcessTelexQuery(ctx context.Context, req TelexChatPayload) error {
+	if lastMessageToTelex == req.Message {
+		return nil // no need to process message
+	}
+
+	p := bluemonday.StrictPolicy()
+	userQuery := p.Sanitize(req.Message)
+	if lastMessageToTelex == userQuery {
+		return nil // no need to process message
+	}
+	htmlStrippedQuery, _ := processQuery(userQuery)
+
+	err := txc.processHelpCmd(ctx, htmlStrippedQuery, req.ChannelID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (txc *TelexCom) ProcessTelexDownloadAndExtraction(ctx context.Context, req TelexChatPayload) error {
+	var extractedTexts strings.Builder
+
+	for _, media := range req.Media {
+		if media.FileType == "pdf" || media.FileType == "docx" {
+			path, err := format.DownloadFile(media.FileLink, media.FileName+"."+media.FileType)
+			if err != nil {
+				return err
+			}
+			file, fileErr := format.CreateMultipartFileHeader(path)
+			if fileErr != nil {
+				return fileErr
+			}
+			text, textErr := format.ExtractText(file)
+			if textErr != nil {
+				return textErr
+			}
+			if text == "" {
+				return fmt.Errorf("failed to extract text. file may be broken.")
+			}
+
+			extractedTexts.WriteString(text)
+			extractedTexts.WriteString("\n\n")
+		}
+	}
+	htmlStrippedQuery := extractedTexts.String()
+	err := txc.processUploadCmd(ctx, htmlStrippedQuery, req.ChannelID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

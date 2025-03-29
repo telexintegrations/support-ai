@@ -110,7 +110,7 @@ var NgrokIntegrationJson = Integration{
 				Default:  "",
 			},
 		},
-		TargetURL: "https://e4a4-102-88-55-185.ngrok-free.app/target/chroma",
+		TargetURL: "https://6ec0-102-216-183-123.ngrok-free.app/db/query",
 		TickURL:   "",
 	},
 }
@@ -152,18 +152,22 @@ type MonitorPayload struct {
 	Settings  []interface{} `json:"settings,omitempty"`
 }
 
-//TODO: clear this from here
-// type PromptPayload struct {
-// 	PathURL  string `json:"path_url,omitempty"`
-// 	Question string `json:"question,omitempty"`
-// }
-
 type TelexChatPayload struct {
 	OrgId     string               `json:"org_id,omitempty"`
 	ChannelID string               `json:"channel_id,omitempty"`
 	ThreadID  string               `json:"thread_id,omitempty"`
 	Message   string               `json:"message,omitempty"`
 	Settings  []IntegrationSetting `json:"settings,omitempty"`
+	AuthSettings []interface{} `json:"auth_settings"`  // Later I'd replace interface{} with a struct
+	Media        []Media       `json:"media"`
+}
+
+type Media struct {
+	ID        string `json:"id"`
+	FileName  string `json:"file_name"`
+	FileType  string `json:"file_type"`
+	MimeType  string `json:"mime_type"`
+	FileLink  string `json:"file_link"`
 }
 
 type TelexResponsePayload struct {
@@ -171,4 +175,8 @@ type TelexResponsePayload struct {
 	Username  string `json:"username"` // the name of your integration
 	EventName string `json:"event_name"`
 	Status    string `json:"status"`
+}
+
+type UploadTextRequestData struct {
+	FileText string `json:"file_text" binding:"required"`
 }
