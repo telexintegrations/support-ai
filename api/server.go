@@ -85,13 +85,16 @@ func (s *Server) SetupRouter() error {
 	r.GET("/test-db", s.FetchEmbeddings)
 	r.GET("/upload", s.uploadPage)
 	r.POST("/upload", s.UploadFiles)
+	r.POST("/db/files", s.UploadFilesToDb)
+	r.POST("/db/text", s.UploadTextToDb)
+	r.POST("/db/query", s.MakeQuerySearch)
 	r.GET("/integration.json", s.sendIntegrationJson)
 	r.GET("/ngrok.json", s.sendNgrokJson)
 	r.GET("/v2/integration.json", s.sendChromaJson)
 	r.POST("/target", s.receiveChatQueries)
+	r.POST("/dummy-routes", s.DummyRoute)
 	r.POST("/target/chroma", s.ReceiveChatQueries2)
 	r.GET("/basic-response", s.BasicResponse)
-	r.POST("/dummy-routes", s.DummyRoute)
 	r.POST("/dummy-search", s.SearchDummyRoutes)
 	// r.GET("/integration",
 	return nil

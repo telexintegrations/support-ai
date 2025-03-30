@@ -14,6 +14,7 @@ type Receiver struct {
 
 func (s *Server) DummyRoute(ctx *gin.Context) {
 	var r Receiver
+
 	err := ctx.BindJSON(&r)
 
 	if err != nil {

@@ -15,15 +15,26 @@ func FormatResponse(data interface{}) ([]byte, error) {
 }
 
 func CleanText(text string) string {
+	// Remove XML tags
+	text = regexp.MustCompile(`<[^>]+>`).ReplaceAllString(text, " ")
+
+	// Remove non-printable characters
+	text = regexp.MustCompile(`[\x00-\x1F\x7F]+`).ReplaceAllString(text, " ")
+
+	// Fix concatenated words (letters, numbers, and uppercase transitions)
+	text = regexp.MustCompile(`([a-zA-Z])([0-9])|([0-9])([a-zA-Z])|([a-z])([A-Z])`).ReplaceAllString(text, `$1$3$5 $2$4$6`)
+
+	// Normalize spaces (convert multiple spaces to a single space)
 	text = regexp.MustCompile(`\s+`).ReplaceAllString(text, " ")
 
-	text = strings.ReplaceAll(text, "\n", " ")
+	// Ensure paragraph spacing (preserve double line breaks)
+	text = regexp.MustCompile(`\n{3,}`).ReplaceAllString(text, "\n\n")
 
+	// Trim leading/trailing spaces
 	text = strings.TrimSpace(text)
 
 	return text
 }
-
 
 func ChunkTextByParagraph(text string, maxWords int) []string {
 	// ChunkTextByParagraph splits text into meaningful chunks while preserving sentence boundaries.
@@ -56,4 +67,13 @@ func ChunkTextByParagraph(text string, maxWords int) []string {
 	}
 
 	return chunks
+}
+
+func StripHTMLTags(input string) string {
+	// Regex to match HTML tags
+	re := regexp.MustCompile("<.*?>")
+	// Replace HTML tags with an empty string
+	cleaned := re.ReplaceAllString(input, "")
+	// Trim spaces
+	return strings.TrimSpace(cleaned)
 }

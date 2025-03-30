@@ -66,7 +66,7 @@ func (s *Server) UploadFiles(ctx *gin.Context) {
 				"error": "Failed to read file",
 			})
 		}
-		fmt.Printf("File content:%s", fileContent)
+		fmt.Printf("File content: %s", fileContent)
 		combinedQuery := fmt.Sprintln(req.Message + fileContent)
 		userQuery = p.Sanitize(combinedQuery)
 

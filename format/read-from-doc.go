@@ -5,20 +5,12 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
+	"strings"
 
 	"github.com/nguyenthenguyen/docx"
 	"rsc.io/pdf"
 )
-
-// isPDF checks if the file is a PDF.
-func isPDF(filePath string) bool {
-	return len(filePath) > 4 && filePath[len(filePath)-4:] == ".pdf"
-}
-
-// isDOCX checks if the file is a DOCX.
-func isDOCX(filePath string) bool {
-	return len(filePath) > 5 && filePath[len(filePath)-5:] == ".docx"
-}
 
 func ExtractTextFromDocx(fileBytes []byte) (string, error) {
 	reader := bytes.NewReader(fileBytes)
@@ -29,17 +21,25 @@ func ExtractTextFromDocx(fileBytes []byte) (string, error) {
 	defer doc.Close()
 
 	text := doc.Editable().GetContent()
-	return text, nil
+	cleanedText := CleanText(text)
+
+	return cleanedText, nil
 }
 
 func ExtractTextFromPDF(pdfBytes []byte) (string, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered from panic in PDF extraction:", r)
+		}
+	}()
+
 	reader := bytes.NewReader(pdfBytes)
 	pdfDoc, err := pdf.NewReader(reader, int64(len(pdfBytes)))
 	if err != nil {
 		return "", err
 	}
 
-	var extractedText string
+	var extractedText strings.Builder
 	numPages := pdfDoc.NumPage()
 	for i := 1; i <= numPages; i++ {
 		page := pdfDoc.Page(i)
@@ -50,19 +50,38 @@ func ExtractTextFromPDF(pdfBytes []byte) (string, error) {
 		// Extract text content from the page
 		content := page.Content()
 		for _, text := range content.Text {
-			extractedText += text.S
+			extractedText.WriteString(text.S + "\n\n")
 		}
 	}
-	return extractedText, nil
+
+	cleanedText := CleanText(extractedText.String())
+	return cleanedText, nil
 }
 
 func ExtractText(fileHeader *multipart.FileHeader) (string, error) {
+	if fileHeader.Size == 0 {
+		return "", fmt.Errorf("file is empty")
+	}
+
 	// Open the file
 	file, err := fileHeader.Open()
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
+
+	// Read first 512 bytes to detect MIME type
+	prevBuf := make([]byte, 512)
+	_, err = file.Read(prevBuf)
+	if err != nil {
+		return "", fmt.Errorf("failed to read file header: %w", err)
+	}
+
+	mimeType := http.DetectContentType(prevBuf)
+	fmt.Println("Detected MIME Type:", mimeType)
+
+	// Reset file pointer
+	file.Seek(0, io.SeekStart)
 
 	// Read file into memory
 	buf := new(bytes.Buffer)
@@ -73,12 +92,16 @@ func ExtractText(fileHeader *multipart.FileHeader) (string, error) {
 
 	fileBytes := buf.Bytes() // Convert to byte slice
 
-	// Determine file type and extract text
-	if isPDF(fileHeader.Filename) {
+	switch mimeType {
+	case "application/pdf":
 		return ExtractTextFromPDF(fileBytes)
-	} else if isDOCX(fileHeader.Filename) {
+	case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
 		return ExtractTextFromDocx(fileBytes)
-	} else {
-		return "", fmt.Errorf("unsupported file format: %s", fileHeader.Filename)
+	case "application/zip":
+		return ExtractTextFromDocx(fileBytes)
+	case "application/msword":
+		return ExtractTextFromDocx(fileBytes)
+	default:
+		return "", fmt.Errorf("unsupported file format: %s", mimeType)
 	}
 }
